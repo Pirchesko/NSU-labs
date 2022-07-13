@@ -1,0 +1,69 @@
+#!groovy
+// Run docker build
+properties([disableConcurrentBuilds()])
+
+pipeline { 
+    agent none
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '1', artifactNumToKeepStr: '1'))
+        timestamps()
+    }
+    stages {
+        stage ('Build') {
+            agent {
+                docker {
+                    image 'maven:3.8.5-jdk-11-slim' 
+                    args '-p 8182:8181' 
+                }
+            }   
+            steps {
+                updateGitlabCommitStatus name: 'build', state: 'pending'
+                echo  " ============== start building backend ==================="
+                dir ('backend') {
+                   // withSonarQubeEnv('sonarqube_instance') {
+                   //     sh 'mvn clean package spring-boot:repackage sonar:sonar'
+                   // }
+                    sh 'mvn clean package spring-boot:repackage'
+                }
+            }
+            post {
+                success {
+                    updateGitlabCommitStatus name: 'build', state: 'success'
+                    }
+                failure {
+                    updateGitlabCommitStatus name: 'build', state: 'failed'
+                    }
+            }
+        }
+        stage("Quality Gate") {
+            agent any
+            options {
+                timeout(time: 2, unit: 'MINUTES') 
+            }
+            steps {
+                echo  " ============== waitForQualityGate ==================="
+                //waitForQualityGate abortPipeline: true
+            }
+        }
+        stage("Deploy: create docker image") {
+            agent any
+            steps {
+                echo " ============== start building docker image =================="
+                dir ('backend') {
+                    sh 'docker 2>/dev/null 1>&2 stop back-dev || true'
+                    sh 'docker 2>/dev/null 1>&2 rm back-dev || true'
+                    sh 'docker 2>/dev/null 1>&2 rmi back-dev:release || true'
+                	sh 'DOCKER_BUILDKIT=1 docker build -t back-dev:release . '
+                }
+            }
+        }
+        stage("Deploy: run docker container") {
+            agent any
+            steps {
+                echo " ============== run docker container ========================="
+                sh 'docker run --restart=always --name back-dev -d -p 8181:8181 back-dev:release'
+                sh 'docker ps'
+            }
+        }
+    }
+}
