@@ -1,0 +1,12 @@
+-- 4.Получить данные о распределении пассажирского автотранспорта по маршрутам
+SELECT "type car", "model", "route name"
+FROM "cars", (
+    SELECT "id buses", "route name"
+    FROM "car atribute", (
+        SELECT "id car" as "id buses"
+        FROM "cars"
+        WHERE (("type car" = 'автобус') OR ("type car" = 'маршрутка'))
+    )
+    WHERE (("route name" IS NOT NULL) AND ("id buses" = "id car"))
+)
+WHERE ("id buses" = "id car");

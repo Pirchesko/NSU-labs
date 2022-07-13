@@ -1,0 +1,4 @@
+nameClass =commands.Add
+countArgs =0
+needArgs =2
+nameCommand =+

@@ -1,0 +1,247 @@
+import ds/tree;
+import runtime;
+import lingo/pegcode/driver;
+
+VarType ::= VarInt, VarArr;
+VarInt();
+VarArr(type : VarType);
+
+VarDecl(name : string, type : VarType);
+
+Expression ::= BinOp, ArrApp, ArrUpd, Var, Const;
+BinOp(op : string, l : Expression, r : Expression);
+ArrApp(arr : Expression, index : Expression);
+ArrUpd(arr : Expression, value : Expression, index : Expression);
+Var(name : string);
+Const(i : int);
+
+VarVal ::= IntVal, ArrVal;
+IntVal(i : int);
+ArrVal(a : Tree<int, VarVal>);
+
+Label(l : int);
+
+State(label : Label, vars : Tree<string, VarVal>);
+
+VMCommand ::= Assign, Condition, Print;
+Assign(var : string, e : Expression, goto : [Label]);
+CompOp(op : string, l : Expression, r : Expression);
+Condition(cond : CompOp, t : [Label], f : [Label]);
+Print(e : Expression, goto : [Label]);
+
+VMLine(label : Label, command : VMCommand);
+VMProgram(decls : [VarDecl], lines : [VMLine]);
+
+initVars(decls : [VarDecl]) -> Tree<string, VarVal> {
+	fold(decls, makeTree(), \acc, v -> {
+		switch(v.type) {
+			VarInt(): setTree(acc, v.name, IntVal(0));
+			VarArr(t): setTree(acc, v.name, ArrVal(makeTree()));
+		}
+	});
+}
+
+run(firstState : State, prog : [VMLine]) -> [State] {
+	for([firstState], \state -> length(state) > 0, \prev -> {
+		fold(prev, [], \acc, state -> {
+			concat(acc, step(state, prog));
+		});
+	});
+}
+
+step(state : State, lines : [VMLine]) -> [State] {
+	if(state.label.l < 0 || state.label.l >= length(lines)) {
+		[]
+	}
+	else {
+		switch(lines[state.label.l].command) {
+			Assign(var, e, goto): {
+				switch(calcExp(e, state.vars)) {
+					Some(res): {
+						vars = setTree(state.vars, var, res);
+						getStates(goto, vars);
+					}
+					None(): [];
+				}
+			}
+			Condition(cond, t, f): {
+				switch(calcCond(cond.l, cond.r, cond.op, state.vars)) {
+					Some(res): {
+						if(res) {
+							getStates(t, state.vars);
+						}
+						else {
+							getStates(f, state.vars);
+						}
+					}
+					None(): [];
+				}
+			}
+			Print(e, goto): {
+				print(e, state.vars);
+				getStates(goto, state.vars);
+			}
+		}
+	}
+}
+
+getStates(goto : [Label], vars : Tree<string, VarVal>) -> [State] {
+	fold(goto, [], \acc, val -> {
+		concat(acc, [State(val, vars)]);
+	});
+}
+
+print(e : Expression, vars : Tree<string, VarVal>) {
+	switch(calcExp(e, vars)) {
+		Some(res): {
+			switch(res) {
+				IntVal(i): println(i2s(i));
+				ArrVal(a): println("Expected int, got array");
+			}
+		}
+		None(): println("Wrong expression");
+	}
+} 
+
+calcExp(e : Expression, vars : Tree<string, VarVal>) -> Maybe<VarVal> {
+	switch(e) {
+		BinOp(op, l, r): {
+			maybeBind(calcExp(l, vars), \x -> {
+				switch(calcExp(r, vars)) {
+					None(): None();
+					Some(y): {
+						switch(calcBinOp(op, x, y)) {
+							None(): None();
+							Some(res): Some(IntVal(res));
+						}
+					}
+				}
+			});
+		}
+		ArrApp(arrExp, indexExp): {
+			maybeBind(calcExp(arrExp, vars), \arr -> {
+				switch(arr) {
+					ArrVal(a): {
+						maybeBind(calcExp(indexExp, vars), \index -> {
+							switch(index) {
+								IntVal(i): maybeBind(lookupTree(a, i), \elem -> {
+									Some(elem);
+								});
+								ArrVal(a2): None();
+							}
+						});
+					}
+					IntVal(j): None();
+				}
+			});
+		}
+		ArrUpd(arrExp, indexExp, valueExp): {
+			maybeBind(calcExp(arrExp, vars), \arr -> {
+				switch(arr) {
+					ArrVal(a): {
+						maybeBind(calcExp(indexExp, vars), \index -> {
+							switch(index) {
+								IntVal(i): {
+									maybeBind(calcExp(valueExp, vars), \value -> {
+										Some(ArrVal(setTree(a, i, value)));
+									});
+								}
+								ArrVal(a2): None();
+							}
+						});
+					}
+					IntVal(j): None();
+				}
+			});
+		}
+		Var(name): {
+			lookupTree(vars, name);
+		}
+		Const(i): {
+			Some(IntVal(i));
+		}
+	}
+}
+
+calcBinOp(op : string, l : VarVal, r : VarVal) -> Maybe<int> {
+	switch(l) {
+		IntVal(x): {
+			switch(r) {
+				IntVal(y): {
+					if(op == "+") Some(x + y)
+					else if(op == "-") Some(x - y)
+					else if(op == "*") Some(x * y)
+					else if(op == "/") Some(x / y)
+					else None();
+				}
+				ArrVal(a2): None();
+			}
+		}
+		ArrVal(a): None();
+	}
+}
+
+calcCond(l : Expression, r : Expression, op : string, vars : Tree<string, VarVal>) -> Maybe<bool> {
+	maybeBind(calcExp(l, vars), \resl -> {
+		maybeBind(calcExp(r, vars), \resr -> {
+			switch(resl) {
+				IntVal(x): {
+					switch(resr) {
+						IntVal(y): {
+							if(op == "==") Some(x == y)
+							else if(op == "!=") Some(x != y)
+							else if(op == ">=") Some(x >= y)
+							else if(op == "<=") Some(x <= y)
+							else if(op == ">") Some(x > y)
+							else if(op == "<") Some(x < y)
+							else None();
+						}
+						ArrVal(a2): None();
+					}
+				}
+				ArrVal(a): None();
+			}
+		});
+	});
+}
+
+checkLabels(lines : [VMLine]) -> bool {
+	if(length(lines) == 0) true
+	else {
+		foldi(lines, true, \i, acc, val -> {
+			if(i < 1) acc
+			else acc && (val.label.l == lines[i - 1].label.l + 1);
+		});
+	}
+}
+
+s2prog(str : string) -> VMProgram {
+	gram = "#include D:\Files\Flow9\materials\vm.lingo";
+	parsic(compilePegGrammar(gram), str, defaultPegActions);
+}
+
+
+main() {
+	prog = s2prog("
+		var x : int;
+		var y : int;
+		var a : [int];
+		0: x = 6 {1 2};
+		1: y = 8 {3 5};
+		2: print(x) {};
+        3: print(y) {};
+        4: print((x + y)) {};
+		5: a = upd(a, (1 - 1), (5 * 3)) {6};
+		6: print((x - app(a, 0))) {};
+	");
+	
+	if(checkLabels(prog.lines)) {
+		vars = initVars(prog.decls);
+		firstState = State(Label(0), vars);
+		run(firstState, prog.lines);
+		println("");
+	}
+	else {
+		println("Wrong labels!");
+	}
+}

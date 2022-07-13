@@ -1,0 +1,38 @@
+prog = s vars*:v s command*:l s {createProgram(:v, :l)};
+
+vars = s "var" s letter+$l s ":" s type:t s ";" s {Vars($l, :t)};
+type = array | int;
+array = s "[" s type:t s "]" s {Array(:t)};
+int = s "int" s {Int()};
+
+command =  assign | test | cond | print | range_execute | select | while;
+
+assign =  s letter+$v s "=" s exp:e s {_Assign(Var($v), :e)};
+test = s "(" s comp:c s ")" s "?" s {_Test(:c)}; 
+cond = s "if" s comp:op s "then" s "{" s command:t s "}" s "else" s "{" s command:f "}" s {createCondition(:op, :t, :f)};
+comp = s "(" s exp:l s compare$c s exp:r s ")" s {Compare($c, :l, :r)};
+print = s "print" s "(" s exp:e s ")" s {_Print(:e)};
+range_execute = s "{" s command:c s range_execute_*:c_ s "}" s {createRangeExecute(:c, :c_)};
+    range_execute_ = s ";" s command:c s {:c};
+select = s "{" s command:c s select_+:r s "}" s {createSelect(:c, :r)};
+    select_ = s "U" s command:c s {:c};
+while = s "while" s "(" s comp:c s ")" s command:body {createWhile(:c, :body)};
+/*assignMas = s letter+$m s "[" s digit+$i s "]" s "=" s exp:e s "goto" s "{" label*:goto s "}" s {Assign(Var($m), SetArr(Var($m), Const(s2i($i)), :e), :goto)};*/
+
+exp = getMas | calc | len | get | set | concat | var | const;
+calc = s "(" s exp:l s operation$o s exp:r s ")" s {Calc($o, :l, :r)};
+var = letter+$l {Var($l)};
+const = digit+$d {Const(s2i($d))};
+len = s "len" s "(" s exp:e s ")" s {LenArr(:e)};
+get = s "get" s "(" s exp:e s "," s exp:i s ")" s {GetArr(:e, :i)};
+set = s "set" s "(" s exp:e s "," s exp:i s "," s exp:v s ")" s {SetArr(:e, :i, :v)};
+concat = s "concat" s "(" s exp:a1 s "," s exp:a2 s ")" s {ConcatArr(:a1, :a2)};
+getMas = s var:m s "[" s const:i s "]" s {GetArr(:m, :i)}; /*не работает почему-то*/
+
+label = digit+$d ","? s {Label(s2i($d))};
+operation = "+" | "-" | "*" | "/" | "%" | "^";
+compare = "==" | "!=" | "<=" | ">=" | ">" | "<";
+letter = 'a' - 'z' | 'A' - 'Z';
+digit = '0' - '9';
+space = " " | "\t" | "\n" | "\r";
+s = space*;

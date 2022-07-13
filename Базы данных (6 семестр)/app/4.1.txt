@@ -1,0 +1,29 @@
+-- Данные о числе ремонтов и их стоимости для каждого автотранспорта (предыдущий запрос но только)
+-- 1 - по конкретной категории трансопрта
+SELECT "model", "type car", "count_repair", "total_sum"
+FROM (
+    SELECT "model", "type car", "id car", "count_repair", "total_sum"
+    FROM "cars", (
+        SELECT "id_car" as "id_car_", "count_repair"
+        FROM "cars", (
+            SELECT "id car" as "id_car", COUNT("id car") as "count_repair"
+            FROM "repairs"
+            GROUP BY "id car"
+        )
+        WHERE ("id car" = "id_car")
+    ), (
+        SELECT "id car" as "id_car__", SUM("sum_repair") as "total_sum"
+        FROM (
+            SELECT "id car", "sum_repair"
+            FROM "repairs", (
+                SELECT SUM("cost") as "sum_repair", "id repair" as "id_repair"
+                FROM "changes"
+                GROUP BY "id repair"
+            )
+            WHERE ("id_repair" = "id repair")
+        )
+        GROUP BY "id car"
+    )
+    WHERE (("id_car_" = "id_car__") AND ("id_car_" = "id car"))
+)
+WHERE ("type car" = '{}');

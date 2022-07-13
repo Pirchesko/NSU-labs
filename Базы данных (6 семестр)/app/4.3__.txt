@@ -1,0 +1,4 @@
+-- 4.3 Подзапрос для выбора авто
+SELECT "id car"
+FROM "cars"
+WHERE ("model" = '{0}') AND ("type car" = '{1}') AND ("mileage" = '{2}');

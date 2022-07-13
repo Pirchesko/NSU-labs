@@ -1,0 +1,39 @@
+gcc lab1.c -std=gnu99 -o lab1.exe -lm
+mpicc lab1_1.c -std=gnu99 -o lab1_1.exe -lm
+mpicc lab1_2.c -std=gnu99 -o lab1_2.exe -lm
+./lab1.exe
+mpirun -np 1 ./lab1_1.exe
+mpirun -np 2 ./lab1_1.exe
+mpirun -np 4 ./lab1_1.exe
+mpirun -np 8 ./lab1_1.exe
+mpirun -np 1 ./lab1_2.exe
+mpirun -np 2 ./lab1_2.exe
+mpirun -np 4 ./lab1_2.exe
+mpirun -np 8 ./lab1_2.exe
+
+gcc lab1_test.c -std=gnu99 -o lab1_test.exe -lm
+gcc lab1_test.c -O3 -std=gnu99 -o lab1_test.exe -lm
+./lab1_test.exe
+
+mpecc -mpilog -std=gnu99 -o mpe_lab1_1.exe lab1_1.c -lm
+mpecc -mpilog -std=gnu99 -o mpe_lab1_2.exe lab1_2.c -lm
+mpirun -np 4 ./mpe_lab1_1.exe
+mpirun -np 4 ./mpe_lab1_2.exe
+
+   16: Steps: 29059
+   32: Steps: 77
+   48: Steps: 127
+   64: Steps: 45343
+   80: Steps: 1337
+   96: Steps: 432
+  112: Steps: 4258
+  128: Steps: 1840
+  144: Steps: 243
+  160: Steps: 482
+  176: Steps: 2243
+  192: Steps: 2986
+  208: Steps: 2785
+  224: Steps: 513
+  240: Steps: 15135
+  256: Steps: 593
+  272: Steps: 11183

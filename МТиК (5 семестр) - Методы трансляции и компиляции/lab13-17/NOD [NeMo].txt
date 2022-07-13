@@ -1,0 +1,13 @@
+var x : int;
+var y : int;
+var res : int;
+{	
+	x = 30;
+	y = 24;
+	while(((x % y) > 0)) {
+		res = (x % y);
+		x = y;
+		y = res
+	};
+	print(res)
+}

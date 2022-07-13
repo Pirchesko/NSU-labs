@@ -1,0 +1,2 @@
+gcc -Wall -O1 -o Lab8.exe Lab8.c
+./progrev.exe && ./Lab8.exe && ./Lab8.exe && ./Lab8.exe && ./Lab8.exe && ./Lab8.exe

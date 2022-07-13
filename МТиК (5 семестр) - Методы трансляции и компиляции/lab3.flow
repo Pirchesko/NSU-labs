@@ -1,0 +1,68 @@
+import form/renderform;
+//Обычный фиббоначи (а)
+fib(n: int) -> [int]{
+    if (n < 0){
+        [];
+    } else if (n == 0){
+        [0];
+    } else if (n == 1){
+        [0,1];
+    } else {
+        m = fib(n-1);
+        count = length(m);
+        f_1 = count - 1;
+        f_2 = count - 2;
+        sum = m[f_1] + m[f_2];
+        concat(m, [sum]);
+    }
+} 
+//Хвостовой фибоначчи (б)
+fib_(n: int) -> [int] {
+    if (n < 0){
+        [];
+    } else if (n == 0){
+        [0];
+    } else if (n == 1){
+        [0,1];
+    } else {
+        hvost(n,[0,1]);
+    }
+}
+hvost(n: int, a: [int]) -> [int]{
+    if (n > 1){
+        count = length(a);
+        f_1 = count - 1;
+        f_2 = count - 2;
+        sum = a[f_1] + a[f_2];
+        hvost(n-1, concat(a, [sum]));
+    } else {
+        a;
+    }
+}
+//Фиббоначи на сонове refArrayPush
+fib__(n: int) -> [int]{
+    if (n < 0){
+        [];
+    } else if (n == 0){
+        [0];
+    } else if (n == 1){
+        [0,1];
+    } else {
+        m = fib(n-1);
+        m_ : ref [int] = ref m;
+        count = length(^m_);
+        f_1 = count - 1;
+        f_2 = count - 2;
+        sum = ^m_[f_1] + ^m_[f_2];
+        refArrayPush(m_, sum);
+        ^m_;
+    }
+}
+main(){
+    a = 6;
+    println(a);
+    println(fib(a));
+    println(fib_(a));
+    println(fib__(a));
+    //quit(0);
+}

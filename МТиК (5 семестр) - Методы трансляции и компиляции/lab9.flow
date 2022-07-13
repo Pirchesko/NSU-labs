@@ -1,0 +1,130 @@
+import form/renderform;
+import lingo/pegcode/driver;
+
+gram = "#include D:\Files\Flow9\lab9.lingo";
+
+Exp ::= Sub, Sum, Mul, Div, Int, Var, Powah;
+	Sub : (e1 : Exp, e2 : Exp);
+    Sum : (e1 : Exp, e2 : Exp);
+    Mul : (e1 : Exp, e2 : Exp);
+    Div : (e1 : Exp, e2 : Exp);
+    Int : (n : int);
+    Var : (s : string);
+    Powah : (e: Exp, i: int);
+
+Drob : (x : int, y : int);
+
+strToStruct(str: string) -> Exp {
+  parsic(compilePegGrammar(gram), str, defaultPegActions)
+}
+
+calc_as_int(nt: Exp, var: [string], num: [int]) -> int {
+    switch(nt) {
+        Sub(l, r): calc_as_int(l, var, num) - calc_as_int(r, var, num);
+        Sum(l, r): calc_as_int(l, var, num) + calc_as_int(r, var, num);
+        Mul(l, r): calc_as_int(l, var, num) * calc_as_int(r, var, num);
+        Div(l, r): calc_as_int(l, var, num) / calc_as_int(r, var, num);
+        Int(n): n;
+        Var(s): {
+            result = foldi(var, -1, \index,returned,element -> {
+                if (element == s){
+                    index;
+                }
+                else {
+                    returned;
+                }
+            });
+            num[result];
+        }
+        Powah(e,x): pow(calc_as_int(e, var, num), x/*calc_as_int(x, var, num)*/);
+    }
+}
+
+//Алгоритм наибольшего общего делителя
+NOD(x: int, y: int) -> int {
+    if (y == 0){
+        x;
+    } else {
+        NOD(y, x % y);
+    }
+}
+
+//Алгоритм наименьшего общего кратного
+NOK(x: int, y: int) -> int {
+    (x / NOD(x, y)) * y;
+}
+
+//Сокарщение дроби
+sokrat(d: Drob) -> Drob {
+    nod = NOD(d.x, d.y);
+    Drob(d.x / nod, d.y / nod);
+}
+
+calc_as_drob(nt: Exp, var: [string], num: [int]) -> Drob {
+    switch(nt) {
+        Sub(l, r): {
+            a = calc_as_drob(l, var, num);
+            b = calc_as_drob(r, var, num);
+            nok = NOK(a.y, b.y);
+            a1 = nok / a.y * a.x; //Числитель первой дроби
+            a2 = nok / b.y * b.x; //Числитлеь второй дроби
+            sokrat(Drob(a1 - a2, nok));
+        } 
+        Sum(l, r): {
+            a = calc_as_drob(l, var, num);
+            b = calc_as_drob(r, var, num);
+            nok = NOK(a.y, b.y);
+            a1 = nok / a.y * a.x; //Числитель первой дроби
+            a2 = nok / b.y * b.x; //Числитлеь второй дроби
+            sokrat(Drob(a1 + a2, nok));
+        }
+        Mul(l, r): {
+            a = calc_as_drob(l, var, num);
+            b = calc_as_drob(r, var, num);
+            sokrat(Drob(a.x * b.x, a.y * b.y));
+        }
+        Div(l, r): {
+            a = calc_as_drob(l, var, num);
+            b = calc_as_drob(r, var, num);
+            sokrat(Drob(a.x * b.y, a.y * b.x));
+        }
+        Int(n): Drob(n, 1);
+        Var(s): {
+            result = foldi(var, -1, \index,returned,element -> {
+                if (element == s){
+                    index;
+                }
+                else {
+                    returned;
+                }
+            });
+            Drob(num[result], 1);
+        }
+        Powah(e,x): {
+            i = calc_as_drob(e, var, num);
+            //d = calc_as_drob(x, var, num);
+            //n = d.x/d.y;
+            //sokrat(Drob(pow(i.x, n), pow(i.y, n)));
+            sokrat(Drob(pow(i.x, x), pow(i.y, x)));
+        }
+    }
+}
+
+main() {
+    //str = "((((((21/13)*(13/42))+((40/7)/(8/21)))/((65/8)+(7/2)))^2)*(3/2))"; //(8/3)
+    //str = "(((8 - (36/6))^3)/2)";
+    str = "((10 / 3) + (10/2))";
+    //str = "(z - 0)";
+    var = ["x", "y", "z", "w"];
+    num = [5,2,3,4];
+    t = strToStruct(str);
+    println(toString(t));
+
+    res2 = calc_as_drob(t, var, num);
+    println("Pare calc with drob   : " + toString(res2));
+    
+    res1 = calc_as_int(t, var, num);
+    println("Pare calc without drob: " + toString(res1));
+
+    quit(0);
+}

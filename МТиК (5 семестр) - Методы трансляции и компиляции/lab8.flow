@@ -1,0 +1,57 @@
+import form/renderform;
+import lingo/pegcode/driver;
+
+gram = "#include D:\Files\Flow9\lab8.lingo";
+
+Exp ::= Sub, Sum, Mul, Div, Int, Var;
+	Sub : (e1 : Exp, e2 : Exp);
+    Sum : (e1 : Exp, e2 : Exp);
+    Mul : (e1 : Exp, e2 : Exp);
+    Div : (e1 : Exp, e2 : Exp);
+    Int : (n : int);
+    Var : (s : string);
+
+strToStruct(str: string) -> Exp {
+  parsic(compilePegGrammar(gram), str, defaultPegActions)
+}
+
+structToParse(nt: Exp, var: [string], num: [int]) -> int {
+    switch(nt) {
+        Sub(l, r): {
+            structToParse(l, var, num) - structToParse(r, var, num);
+        }
+        Sum(l, r): {
+            structToParse(l, var, num) + structToParse(r, var, num);
+        }
+        Mul(l, r): {
+            structToParse(l, var, num) * structToParse(r, var, num);
+        }
+        Div(l, r): {
+            structToParse(l, var, num) / structToParse(r, var, num);
+        }
+        Int(n): n;
+        Var(s): {
+            result = foldi(var, -1, \index,returned,element -> {
+                if (var[index] == s){
+                    //println(index);
+                    index;
+                }
+                else {
+                    //println(returned);
+                    returned;
+                }
+            });
+            num[result];
+        }
+    }
+}
+
+main() {
+    str = "(z * 2)";
+    var = ["x", "y", "z", "w"];
+    num = [5,2,3,4];
+    t = strToStruct(str);
+    res = structToParse(t, var, num);
+    println("Pare calc: " + toString(res));
+    quit(0);
+}

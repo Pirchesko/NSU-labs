@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="game.controller.MenuController"
+            style="-fx-background-image: url(game/background.jpg);"
+            prefHeight="600.0" prefWidth="960.0">
+
+    <ImageView pickOnBounds="true" preserveRatio="true" x="309.0" y="70.0">
+        <image>
+            <Image url="@/game/snake.png" />
+        </image>
+    </ImageView>
+
+    <ImageView fx:id="newGameButton" onMouseClicked="#newGameButtonPressed" onMouseMoved="#newGameButtonMoved" onMouseExited="#newGameButtonExited" pickOnBounds="true" preserveRatio="true" x="315.0" y="200.0">
+        <image>
+            <Image url="@/game/buttons/new_game_button/new_game_1.png" />
+        </image>
+    </ImageView>
+
+    <ImageView fx:id="connectButton" onMouseClicked="#connectButtonPressed" onMouseMoved="#connectButtonMoved" onMouseExited="#connectButtonExited" pickOnBounds="true" preserveRatio="true" x="328.0" y="275.0">
+        <image>
+            <Image url="@/game/buttons/connect_button/connect_1.png" />
+        </image>
+    </ImageView>
+
+    <ImageView fx:id="optionsButton" onMouseClicked="#optionsButtonPressed"  onMouseMoved="#optionsButtonMoved" onMouseExited="#optionsButtonExited" pickOnBounds="true" preserveRatio="true" x="335.0" y="354.0">
+        <image>
+            <Image url="@/game/buttons/options_button/options_1.png" />
+        </image>
+    </ImageView>
+
+    <ImageView fx:id="exitButton" onMouseClicked="#exitButtonPressed" onMouseMoved="#exitButtonMoved" onMouseExited="#exitButtonExited" pickOnBounds="true" preserveRatio="true" x="402.0" y="435.0">
+    <image>
+        <Image url="@/game/buttons/exit_button/exit_1.png" />
+    </image>
+    </ImageView>
+
+    <ImageView pickOnBounds="true" preserveRatio="true" x="799.0" y="569.0">
+        <image>
+            <Image url="@/game/nokia_mode.png" />
+        </image>
+    </ImageView>
+</AnchorPane>

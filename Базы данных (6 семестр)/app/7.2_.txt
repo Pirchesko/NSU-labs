@@ -1,0 +1,8 @@
+-- Выбор авто которое ремонтировалось
+SELECT "model", "type car", "mileage"
+FROM "repairs", (
+    SELECT "id car" as "id", "model", "type car", "mileage"
+    FROM "cars"
+    )
+WHERE "id car" = "id"
+ORDER BY "model";

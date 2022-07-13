@@ -1,0 +1,28 @@
+import lingo/pegcode/driver;
+
+gram = "#include int_tree.lingo";
+
+NumTree ::= NumNode, NumLeaf;
+  NumNode(l: NumTree, n: int, r: NumTree);
+  NumLeaf();
+
+s2numtree(str: string) -> NumTree {
+  parsic(compilePegGrammar(gram), str, defaultPegActions)
+}
+
+prettyNumTree(nt: NumTree) -> string {
+  switch(nt) {
+    NumNode(l, n, r): {
+      "(" + strGlue([prettyNumTree(l), i2s(n), prettyNumTree(r)], " ") + ")";
+    }
+    NumLeaf(): "_"
+  }
+}
+
+
+main() {
+  t = s2numtree("((_ 2 _) 1 _)");
+  println(t);
+  println(prettyNumTree(t));
+  quit(0);
+}

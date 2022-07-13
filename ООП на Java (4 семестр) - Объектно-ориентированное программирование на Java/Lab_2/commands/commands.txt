@@ -1,0 +1,10 @@
+DEFINE =define.txt
+COMMENT =comment.txt
+PUSH =push.txt
+POP =pop.txt
+PRINT =print.txt
++ =add.txt
+- =sub.txt
+* =mul.txt
+/ =div.txt
+SQRT =sqrt.txt

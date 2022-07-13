@@ -1,0 +1,1 @@
+g++ -o Lab6.exe -I/usr/include/libusb-1.0 Lab6.cpp -lusb-1.0

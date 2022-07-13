@@ -1,0 +1,8 @@
+gcc -Wall -O0 -o Lab2_O0.exe Lab2.c
+gcc -Wall -O1 -o Lab2_O1.exe Lab2.c
+gcc -Wall -O2 -o Lab2_O2.exe Lab2.c
+gcc -Wall -O3 -o Lab2_O3.exe Lab2.c
+gcc -Wall -Os -o Lab2_Os.exe Lab2.c
+gcc -Wall -Ofast -o Lab2_Ofast.exe Lab2.c
+gcc -Wall -Og -o Lab2_Og.exe Lab2.c
+./Lab2_O0.exe && ./Lab2_O1.exe && ./Lab2_O2.exe && ./Lab2_O3.exe && ./Lab2_Os.exe && ./Lab2_Ofast.exe && ./Lab2_Og.exe

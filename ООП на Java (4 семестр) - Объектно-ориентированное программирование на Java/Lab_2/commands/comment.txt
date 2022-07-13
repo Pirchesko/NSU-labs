@@ -1,0 +1,4 @@
+nameClass =commands.Comment
+countArgs =0
+needArgs =0
+nameCommand =COMMENT

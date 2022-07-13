@@ -1,0 +1,75 @@
+import form/renderform;
+
+myFoldi(xs : [?], init : ??, fn : (int, ??, ?)->??) -> ?? {
+    m = [init];
+    m_ : ref [??] = ref m;
+    fori(0, length(xs) - 1, \index -> {
+        refArrayPush(m_, fn(index, ^m_[index], xs[index]));
+        println(^m_[index+1]);
+    });
+    ^m_[length(xs)];
+}
+
+Exp ::= Sub, Sum, Mul, Div, Int, Var, Powah;
+	Sub : (e1 : Exp, e2 : Exp);
+    Sum : (e1 : Exp, e2 : Exp);
+    Mul : (e1 : Exp, e2 : Exp);
+    Div : (e1 : Exp, e2 : Exp);
+    Int : (n : int);
+    Var : (s : string);
+    Powah : (e: Exp, i: int);
+
+recurse(n : int) -> [int] {
+    if (n == 0){
+        [0];
+    } else {
+        concat(recurse(n-1), [n]);
+    }
+}
+
+main(){
+    var = ["x", "y", "z", "w"];
+    num = [1,2,3,4];
+    s = "z";
+
+    println("Normal foldi:");
+    result = foldi(var, -1, \index,returned,element -> {
+                if (var[index] == s){
+                    println(index);
+                    index;
+                }
+                else {
+                    println(returned);
+                    returned;
+                }
+            });
+    println("Returned: " + toString(result));
+    println("\n");
+    
+    println("My foldi:");
+    result1 = myFoldi(var, -1, \index,returned,element -> {
+        if (var[index] == s){
+                    index;
+                }
+                else {
+                    returned;
+                }
+    });
+    println("Returned: " + toString(result1));
+
+    //a = Int(0);
+    //b = Var("x");
+    //println(toString(isSameStructType(a,b)));
+    //len = 9;
+    //indexes = for([len], \i -> (len > 0), \get -> {
+	//	concat(get, [len - 1]);
+	//});
+    //println(indexes);
+    a = [1,2];
+    b = concat([a], [a]);
+    println(b);
+
+    //println(recurse(5));
+
+    quit(0);
+}

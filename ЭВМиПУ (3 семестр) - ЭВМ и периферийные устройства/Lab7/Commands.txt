@@ -1,0 +1,5 @@
+gcc -Wall -O2 -o Lab7_1.exe Lab7_1.c
+gcc -Wall -msse2 -O2 -o Lab7_2.exe Lab7_2.c
+gcc -I/usr/local/atlas/include -L/usr/local/atlas/lib \-O2 -o Lab7_3.exe Lab7_3.c -lcblas -latlas
+./Lab7_1.exe && ./Lab7_2.exe && ./Lab7_3.exe
+

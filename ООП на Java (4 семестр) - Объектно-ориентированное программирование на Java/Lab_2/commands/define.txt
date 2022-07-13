@@ -1,0 +1,4 @@
+nameClass =commands.Define
+countArgs =2
+needArgs =0
+nameCommand =DEFINE

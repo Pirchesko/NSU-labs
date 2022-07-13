@@ -1,0 +1,4 @@
+nameClass =commands.Push
+countArgs =1
+needArgs =0
+nameCommand =PUSH

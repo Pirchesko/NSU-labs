@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="game.controller.NewGameController"
+            style="-fx-background-image: url(game/background.jpg);"
+            prefHeight="600.0" prefWidth="960.0">
+
+    <ImageView pickOnBounds="true" preserveRatio="true" x="180.0" y="60.0">
+        <Image url="@/game/new_game/field_size.png"/>
+    </ImageView>
+
+    <ImageView pickOnBounds="true" preserveRatio="true" x="180.0" y="115.0">
+        <Image url="@/game/new_game/food_static.png"/>
+    </ImageView>
+
+    <ImageView pickOnBounds="true" preserveRatio="true" x="180.0" y="170.0">
+        <Image url="@/game/new_game/food_per_player.png"/>
+    </ImageView>
+
+    <ImageView pickOnBounds="true" preserveRatio="true" x="180.0" y="225.0">
+        <Image url="@/game/new_game/state_delay.png"/>
+    </ImageView>
+
+    <ImageView pickOnBounds="true" preserveRatio="true" x="180.0" y="280.0">
+        <Image url="@/game/new_game/dead_food_prob.png"/>
+    </ImageView>
+
+    <ImageView pickOnBounds="true" preserveRatio="true" x="180.0" y="335.0">
+        <Image url="@/game/new_game/ping_delay.png"/>
+    </ImageView>
+
+    <ImageView pickOnBounds="true" preserveRatio="true" x="180.0" y="390.0">
+        <Image url="@/game/new_game/node_timeout.png"/>
+    </ImageView>
+
+    <ImageView pickOnBounds="true" preserveRatio="true" x="180.0" y="445.0">
+        <Image url="@/game/new_game/max_players.png"/>
+    </ImageView>
+
+    <TextField fx:id="sizeField1" layoutX="582.0" layoutY="64.0" prefWidth="53.0" prefHeight="36.0">
+        <font>
+            <Font size="17.0" />
+        </font>
+    </TextField>
+
+    <ImageView pickOnBounds="true" preserveRatio="true" x="637.0" y="60.0">
+        <Image url="@/game/new_game/x.png"/>
+    </ImageView>
+
+    <TextField fx:id="sizeField2" layoutX="683.0" layoutY="64.0" prefWidth="53.0" prefHeight="36.0">
+        <font>
+            <Font size="17.0" />
+        </font>
+    </TextField>
+
+    <TextField fx:id="foodStatic" layoutX="634.0" layoutY="119.0" prefWidth="53.0" prefHeight="36.0">
+        <font>
+            <Font size="17.0" />
+        </font>
+    </TextField>
+
+    <TextField fx:id="foodPerPlayer" layoutX="634.0" layoutY="174.0" prefWidth="53.0" prefHeight="36.0">
+        <font>
+            <Font size="17.0" />
+        </font>
+    </TextField>
+
+    <TextField fx:id="stateDelayMs" layoutX="634.0" layoutY="229.0" prefWidth="53.0" prefHeight="36.0">
+        <font>
+            <Font size="17.0" />
+        </font>
+    </TextField>
+
+    <TextField fx:id="deadFoodProb" layoutX="634.0" layoutY="284.0" prefWidth="53.0" prefHeight="36.0">
+        <font>
+            <Font size="17.0" />
+        </font>
+    </TextField>
+
+    <TextField fx:id="pingDelayMs" layoutX="634.0" layoutY="339.0" prefWidth="53.0" prefHeight="36.0">
+        <font>
+            <Font size="17.0" />
+        </font>
+    </TextField>
+
+    <TextField fx:id="nodeTimeoutMs" layoutX="634.0" layoutY="394.0" prefWidth="53.0" prefHeight="36.0">
+        <font>
+            <Font size="17.0" />
+        </font>
+    </TextField>
+
+    <TextField fx:id="maxPlayersField" layoutX="634.0" layoutY="449.0" prefWidth="53.0" prefHeight="36.0">
+        <font>
+            <Font size="17.0" />
+        </font>
+    </TextField>
+
+    <ImageView fx:id="startButton" onMouseClicked="#startButtonPressed" onMouseExited="#startButtonExited" onMouseMoved="#startButtonMoved" pickOnBounds="true" preserveRatio="true" x="805.0" y="539.0">
+        <image>
+            <Image url="@/game/buttons/start_button/start_1.png" />
+        </image>
+    </ImageView>
+
+    <ImageView fx:id="backButton" onMouseClicked="#backButtonPressed" onMouseExited="#backButtonExited" onMouseMoved="#backButtonMoved" pickOnBounds="true" preserveRatio="true" x="11.0" y="527.0">
+        <image>
+            <Image url="@/game/buttons/back_button/back_1.png" />
+        </image>
+    </ImageView>
+</AnchorPane>

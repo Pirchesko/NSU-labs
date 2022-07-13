@@ -1,0 +1,3 @@
+INSERT ALL
+    INTO "{0}" VALUES (sq_{1}.NEXTVAL, {2}, {3}, {4})
+SELECT * FROM dual;

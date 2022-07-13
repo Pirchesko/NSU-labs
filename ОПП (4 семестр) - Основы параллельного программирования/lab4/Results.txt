@@ -1,0 +1,49 @@
+Number of MPI process: 16
+File $PBS_NODEFILE:
+cn212.hpc.nusc.ru
+cn212.hpc.nusc.ru
+cn212.hpc.nusc.ru
+cn212.hpc.nusc.ru
+cn212.hpc.nusc.ru
+cn212.hpc.nusc.ru
+cn212.hpc.nusc.ru
+cn212.hpc.nusc.ru
+cn201.hpc.nusc.ru
+cn201.hpc.nusc.ru
+cn201.hpc.nusc.ru
+cn201.hpc.nusc.ru
+cn201.hpc.nusc.ru
+cn201.hpc.nusc.ru
+cn201.hpc.nusc.ru
+cn201.hpc.nusc.ru
+
+Without MPI
+count = 30
+Accuracy = 7.472611e-05
+Time = 37.052027
+ 
+MPI (1)
+count = 30
+Accuracy = 7.472611e-05
+Time: 37.095187 
+ 
+MPI (2)
+count = 30
+Accuracy = 7.472611e-05
+Time: 18.694440 
+ 
+MPI (4)
+count = 30
+Accuracy = 7.472611e-05
+Time: 9.613881 
+ 
+MPI (8)
+count = 30
+Accuracy = 7.472611e-05
+Time: 5.099618 
+ 
+MPI (16)
+count = 30
+Accuracy = 7.472611e-05
+Time: 2.668528 
+ 

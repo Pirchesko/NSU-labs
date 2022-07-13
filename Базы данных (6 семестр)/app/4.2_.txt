@@ -1,0 +1,4 @@
+-- 4.2 Подзапрос для выбора марки авто
+SELECT "model"
+FROM "cars"
+GROUP BY "model";

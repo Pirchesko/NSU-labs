@@ -1,0 +1,4 @@
+nameClass =commands.Pop
+countArgs =0
+needArgs =1
+nameCommand =POP

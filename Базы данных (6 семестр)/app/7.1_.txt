@@ -1,0 +1,4 @@
+-- 14. Выбор специалиста
+SELECT "type staff"
+FROM "staff"
+GROUP BY "type staff";

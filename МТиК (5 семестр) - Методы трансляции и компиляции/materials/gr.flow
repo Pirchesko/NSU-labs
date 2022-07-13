@@ -1,0 +1,16 @@
+import lingo/pegcode/driver;
+import runtime;
+
+Int : (n: int);
+Vec : (x: Int, y: Int);
+Sum : (v1: Vec, v2: Vec);
+
+run(p: Sum) -> Vec {
+    Vec(Int(p.v1.x.n + p.v2.x.n), Int(p.v1.y.n + p.v2.y.n));
+}
+
+main() {
+	result = parsic(compilePegGrammar("#include vec.lingo"), "(2,3)+(3,4)", defaultPegActions);
+    println(result);
+    println(run(result));
+}

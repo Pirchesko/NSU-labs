@@ -1,0 +1,8 @@
+StorageCarcassSize =100
+StorageEngineSize =100
+StorageAccessorySize =100
+StorageAutoSize =100
+AccessorySuppliers =5
+Workers =10
+Dealers =5
+LogSale=true

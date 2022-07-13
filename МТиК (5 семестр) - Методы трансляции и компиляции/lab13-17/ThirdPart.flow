@@ -1,0 +1,1111 @@
+import runtime;
+import lingo/pegcode/driver;
+import ds/tree;
+
+//-------------------- Virtual Machine -----------------------------------------------------------------------------------------------------------------------
+//---------- Общая структура программы -----------------------------------------------------------------------------------------------------------------------
+
+Program(vars : [Vars], lines : [Line]);
+
+Vars(name : string, type : Type);
+Type ::= Array, Int; 
+	Array : (type : Type); 
+	Int : (); 
+
+Line(label : Label, command : Command);
+Label(n : int);
+Command ::= Assign, Condition, Print, GoTo;
+    Assign : (var : Var, e : Expression, goto : [Label]);
+    Condition : (cond : Compare, t : [Label], f : [Label]);
+    Print : (e : Expression, goto : [Label]);
+	GoTo : (goto : [Label]);
+Compare(op : string, l : Expression, r : Expression);
+
+Expression ::= Calc, Var, Const, LenArr, GetArr, SetArr, ConcatArr; //get(), len(), concat(), set()
+    Calc : (op : string, l : Expression, r : Expression);
+    Var : (name : string);
+    Const : (i : int);
+	LenArr : (arr : Expression); 
+	GetArr : (arr : Expression, index: Expression);
+	SetArr : (arr : Expression, index : Expression, value: Expression);
+	ConcatArr(arr1 : Expression, arr2 : Expression);
+
+Position(label : Label, vars : Tree<string, Value>);
+Value ::= ArrayValue, IntValue; 
+	ArrayValue : (arr: Tree<int, Value>); 
+	IntValue : (i : int); 
+
+//---------- Функции позволяющие исполнять программу ---------------------------------------------------------------------------------------------------------
+
+printRecurseIndexes(n : int) -> [int] { //Генератор индексов для массива для удобства
+    if (n == 0){
+        [0];
+    } else {
+        concat(printRecurseIndexes(n-1), [n]);
+    }
+}
+
+printArray(arr : Tree) -> string {
+	length = foldTree(arr, 0, \index,value,acc -> {
+		if (index > acc) {
+			index + 1;
+		} else {
+			acc + 1;
+		}
+	});
+	indexes = printRecurseIndexes(length - 1);
+	fold(indexes, "[", \acc,index -> {
+		value = lookupTree(arr, index);
+		switch(value) {
+			Some(val): {
+				switch(val) {
+					ArrayValue(arr_): {
+						if (index == length - 1){
+							acc + printArray(arr_) + "]";
+						}
+						else {
+							acc + printArray(arr_) + ", ";
+						}
+					}
+					IntValue(i): {
+						if (index == length - 1) { 
+							acc + toString(i) + "]";
+						} else {
+							acc + toString(i) + ", ";
+						}
+					}
+				}
+			}
+			None(): ""; //Это может произойти, поскольку у меня не хорошо защищены массивы от хаотичного заполнения индексами
+		}
+	});
+}
+
+print(e : Expression, vars : Tree<string, Value>) {
+    switch(executeExp(e, vars)){
+		Some(result): {
+			switch(result) {
+				IntValue(i): println(i2s(i))
+				ArrayValue(arr): println(printArray(arr));
+			}
+		}
+		None(): println("print(): Something wrong.")
+	}
+} 
+
+executeCalc(op : string, left : Value, right : Value) -> Maybe<int> {
+	switch(left) {
+		IntValue(l): {
+			switch(right) {
+				IntValue(r): {
+					if (op == "+") {
+    				    Some(l + r);
+    				} else if (op == "-") {
+   				     	Some(l - r);
+   					} else if (op == "*") {
+   				    	Some(l * r);
+  					} else if (op == "/") {
+  				    	Some(l / r);
+   					} else if (op == "%") {
+ 				        Some(l % r);
+  					} else {
+   				    	println("Error! Default operation: \"+\"");
+   				    	Some(l + r);
+   					}
+				}
+				ArrayValue(arr2): None();
+			}
+		}
+		ArrayValue(arr1): None();
+	}
+}
+
+executeCond(l : Expression, r : Expression, op : string, vars : Tree<string, Value>) -> Maybe<bool> {
+	left = executeExp(l, vars);
+	right = executeExp(r, vars);
+	switch(left) {
+		Some(x1): {
+			switch(right) {
+				Some(y1): {
+					switch(x1) {
+						IntValue(x): {
+							switch(y1) {
+								IntValue(y): {
+									if(op == "==") {
+				    				    Some(x == y);
+    								} else if (op == "!=") {
+    								    Some(x != y);
+				    				} else if (op == ">=") {
+    								    Some(x >= y);
+    								} else if (op == "<=") {
+    								    Some(x <= y);
+    								} else if (op == ">") {
+    								    Some(x > y);
+    								} else if (op == "<") {
+    								    Some(x < y);
+    								} else {
+    								    println("Error! Default operation: \"==\"");
+    								    Some(x == y);
+    								}
+								}
+								ArrayValue(arr2): None();
+							}
+						}
+						ArrayValue(arr1): None();
+					}
+				}
+				None(): None();
+			}
+		}
+		None(): None();
+	}
+}
+
+executeExp(e : Expression, vars : Tree<string, Value>) -> Maybe<Value> {
+	switch(e) {
+		Calc(op, l, r): {
+			left = executeExp(l, vars);
+			right = executeExp(r, vars);
+			switch(left) {
+				Some(x): {
+					switch(right) {
+						Some(y): switch(executeCalc(op, x, y)) {
+							Some(result): Some(IntValue(result));
+							None(): None();
+						}
+						None(): None();
+					}
+				}
+				None(): None();
+			}
+        }
+		Var(name): {
+			lookupTree(vars, name);
+		}
+		Const(i): Some(IntValue(i));
+		LenArr(arr): { //Для многомерных массивах должно работать
+			array = executeExp(arr, vars);
+			switch(array) {
+				Some(res_array): {
+					switch(res_array) {
+						ArrayValue(a): {
+							countElement = foldTree(a, 0, \index,value,acc -> {
+								if (index > acc){
+									//println("fold: " + toString(index));
+									index + 1;
+								}
+								else {
+									//println("acc: " + toString(acc));
+									acc + 1;
+								}
+							});
+							Some(IntValue(countElement));
+						}
+						IntValue(n): None(); //Вместо массива оказался инт (Получили инт, ожидали массив)
+					}
+				}
+				None(): None(); //Ожидали Some() вернулся None()
+			}
+		}
+		GetArr(arr, index): { //Для многомерных массивах должно работать
+			array = executeExp(arr, vars);
+			switch(array) {
+				Some(res_array): {
+					switch(res_array) {
+						ArrayValue(a): {
+							indexArray = executeExp(index, vars);
+							switch(indexArray) {
+								Some(res_index): {
+									switch(res_index) {
+										IntValue(i): {
+											element = lookupTree(a, i);
+											switch(element) {
+												Some(result): {
+													Some(result);
+												}
+												None(): { //Не существует элемента по такому индексу (выводим ошибку)
+													switch(arr) {
+														Var(name): {
+															println("get(): In this element is not exist: " + name + "[" + toString(i) + "]");
+															None(); //Всегда возварт None()
+														}
+														default: None(); //Всегда возварт None()
+													} 
+												}
+											}
+										}
+										ArrayValue(a1): None(); //Вместо индекса оказался массив (Получили массив, ожидали инт)
+									}
+								}
+								None(): None(); //Ожидали Some() вернулся None()
+							}
+						}
+						IntValue(i1): None(); //На месте массива оказался инт (Получили инт, ожидали массив)
+					}
+				}
+				None(): None(); //Ожидали Some() вернулся None()
+			}
+		}
+		SetArr(arr, index, elem): { //Многомерные массивы должны работать (?) //Надо доработать механику массивов
+			array = executeExp(arr, vars);
+			switch(array) {
+				Some(res_array): {
+					switch(res_array) {
+						ArrayValue(a): {
+							indexArray = executeExp(index, vars);
+							switch(indexArray){
+								Some(res_index): {
+									switch(res_index) {
+										IntValue(i): {
+											elementArray = executeExp(elem, vars);
+											switch(elementArray) {
+												Some(res_elem): { //Вернулся какой-то элемент: это может быть как массив, так и инт
+													if (i < 0){ //Индексы положительные
+														println("set(): Index is negative \"" + toString(i) + "\"");
+														None();
+													} else if (i == 0) { //Самый первый элемент, его без проблем меняем
+														//Существует проблема замены подмассива на инт или другого уровня подмассива!
+														deleteOldElement = removeFromTree(a, i); 
+														inputNewElem = setTree(deleteOldElement, i, res_elem);
+														Some(ArrayValue(inputNewElem));
+													} else { //А тут проверяем чтоб у нас существовал предыдущий индекс
+														checkPreviousIndex = lookupTree(a, i-1);
+														switch(checkPreviousIndex) {
+															Some(res_previous_index): {
+																//switch (res_previous_index) {
+																	if (isSameStructType(res_previous_index, res_elem)) { //Необходимо чтобы вставляемый элемент был одинаковой структорой как и все остальные элементы массивы
+																		deleteOldElement = removeFromTree(a, i); 
+																		inputNewElem = setTree(deleteOldElement, i, res_elem);
+																		Some(ArrayValue(inputNewElem));
+																	}
+																	else {
+																		println("Error! You input in massive bad type. For example it may be in [[int]] push int, but need in push [int]");
+																		None();
+																	}
+																//}
+															}
+															None(): {
+																println("Error! No elements before!"); //У нас не оказалось инициализированных элементов до текущего указанного
+																None();
+															}
+														}
+													}
+												}
+												None(): None(); //Ожидали Some() вернулся None()
+											}
+										}
+										ArrayValue(a_): None(); //Вместо индекса оказался массив (Получили массив, ожидали инт)
+									}
+								}
+								None(): None(); //Ожидали Some() вернулся None()
+							}
+						}
+						IntValue(i_): None(); //На месте массива оказался инт (Получили инт, ожидали массив)
+					}
+				} 
+				None(): None();
+			}
+		}
+		ConcatArr(arr1, arr2): {
+			array1 = executeExp(arr1, vars);
+			array2 = executeExp(arr2, vars);
+			switch(array1) {
+				Some(res_array1): {
+					switch(res_array1) {
+						ArrayValue(a1): {
+							switch(array2) {
+								Some(res_array2): {
+									switch(res_array2) {
+										ArrayValue(a2): {
+											len1 = executeExp(LenArr(arr1), vars);
+											switch(len1) {
+												Some(res_len1): {
+													switch(res_len1) {
+														IntValue(length1): {
+															a1_a2 = foldTree(a2, a1, \index,value,acc -> {
+																setTree(acc, length1 + index, value);
+															});
+															Some(ArrayValue(a1_a2));
+														}
+														ArrayValue(length1_): None(); //Вместо индекса оказался массив (Получили массив, ожидали инт)
+													}
+												}
+												None(): None(); //Ожидали Some() вернулся None()
+											}
+										}
+										IntValue(a2_): None(); //На месте массива оказался инт (Получили инт, ожидали массив)
+									}
+								}
+								None(): None();
+							}
+						}
+						IntValue(a1_): None(); //На месте массива оказался инт (Получили инт, ожидали массив)
+					}
+				}
+				None(): None();
+			}
+		}
+	}
+}
+
+getPositions(goto : [Label], vars : Tree<string, Value>) -> [Position] {
+	fold(goto, [], \acc, val -> {
+		concat(acc, [Position(val, vars)]);
+	});
+}
+
+step(pos : Position, lines : Tree<Label, Command>) -> [Position] {
+	switch(lookupTree(lines, pos.label)) {
+        None(): [];
+		Some(command): {
+			switch(command) {
+				Assign(var, e, goto): {
+					switch(executeExp(e, pos.vars)) {
+						Some(result): {
+							vars = setTree(pos.vars, var.name, result);
+							getPositions(goto, vars);
+						} 
+						None(): [];
+					}
+				}
+				Condition(cond, t, f): {
+					switch(executeCond(cond.l, cond.r, cond.op, pos.vars)){
+						Some(result): {
+							if (result) {
+					    		getPositions(t, pos.vars);
+							}
+							else {
+								getPositions(f, pos.vars);
+							}
+						}
+						None(): [];
+					}
+				}
+				Print(e, goto): {
+					print(e, pos.vars);
+					getPositions(goto, pos.vars);
+				}
+				GoTo(goto): {
+					getPositions(goto, pos.vars);
+				}
+			}
+		}
+    }
+}
+
+execute(firstPosition : Position, prog : Tree<Label, Command>) -> [Position] {
+	for([firstPosition], \pos -> length(pos) > 0, \prev -> {
+		fold(prev, [], \acc, pos -> {
+			concat(acc, step(pos, prog));
+		});
+	});
+}
+
+//---------- Из структуры программы в её текст: --------------------------------------------------------------------------------------------------------------
+
+labelsToString(labels: [Label]) -> string {
+	if (length(labels) == 0) {
+		"{}";
+	} else {
+		l = foldi(labels, "", \i,acc,label -> {
+			if (length(labels) == i + 1){
+				acc + toString(label.n);
+			} else {
+				acc + toString(label.n) + ", "; 
+			}
+		});
+		"{" + l + "}";
+	}
+}
+
+expToString(e : Expression) -> string {
+	switch(e) {
+		LenArr(a): {
+			"len(" + expToString(a) + ")";
+		}
+		GetArr(a, i): {
+			"get(" + expToString(a) + ", " + expToString(i) + ")";
+		}
+		SetArr(a, i, el): {
+			"set(" + expToString(a) + ", " + expToString(i) + ", " + expToString(el) + ")";
+		}
+		ConcatArr(a1, a2): {
+			"concat(" + expToString(a1) + ", " + expToString(a2) + ")";
+		}
+		Calc(op, l, r): {
+			"(" + strGlue([expToString(l), (" " + op + " "), expToString(r)], "") + ")";
+		}
+		Const(i): toString(i);
+		Var(v): v;
+	}
+}
+
+varToString(t: Type) -> string {
+	switch (t) {
+		Array(type): {
+			"[" + varToString(type) + "]";
+		}
+		Int(): "int" ;
+	}
+}
+
+progToString(program: Program) -> string {
+	s1 = fold(program.vars, "", \acc,var -> {
+		acc + "var " + var.name + " : " + varToString(var.type) + ";\n";
+	});
+	s2 = fold(program.lines, "", \acc,elem -> {
+		switch(elem) {
+			Line(label, command): {
+				switch(command) {
+					Assign(var, e, goto): {
+						acc + toString(label.n) + ": " + expToString(var) + " = " + expToString(e) + " goto " + labelsToString(goto) + ";\n";
+					}
+					Condition(cond, t, f): {
+						switch(cond) {
+							Compare(op, l, r): {
+								acc + toString(label.n) + ": " + "if (" + expToString(l) + " " + op + " " + expToString(r) + ") then " + labelsToString(t) + " else " + labelsToString(f) + ";\n";
+							}
+						}
+					}
+					Print(e, goto): {
+						acc + toString(label.n) + ": " + "print(" + expToString(e) + ") goto " + labelsToString(goto) + ";\n";
+					}
+					GoTo(goto): {
+						acc + toString(label.n) + ": " + "goto " + labelsToString(goto) + ";\n";
+					}
+				}
+			}
+		}
+	});
+	s1 + s2;
+}
+
+//---------- Создание контейнеров для хранения пременных и строчек программ ----------------------------------------------------------------------------------
+
+createVars(vars : [Vars]) -> Tree<string, Value> {
+	fold(vars, makeTree(), \acc, v -> {
+		switch(v.type) {
+			Array(arr) : setTree(acc, v.name, ArrayValue(makeTree()));
+			Int() : setTree(acc, v.name, IntValue(0));
+		}
+	});
+}
+
+createLines(line: [Line]) -> Tree<Label, Command> {
+	fold(line, makeTree(), \acc,l -> {
+		setTree(acc, l.label, l.command);
+	});
+}
+
+//---------- Предзапусковые проверки возможности выполнения некоторых операторов (которые есть в lingo, но действия которых не описано в программе) ----------
+
+safatyCheck(exp : Expression, vars : Tree<string, Value>) -> bool {
+	switch(exp) {
+		LenArr(arr): { //Для многомерных массивах должно работать
+			array = executeExp(arr, vars);
+			switch(array) {
+				Some(res_array): {
+					switch(res_array) {
+						ArrayValue(a): true;
+						IntValue(n): false; //Вместо массива оказался инт (Получили инт, ожидали массив)
+					}
+				}
+				None(): false; //Ожидали Some() вернулся None() (вероятно такой переменной не существует)
+			}
+		}
+		GetArr(arr, index): { //Для многомерных массивах должно работать
+			array = executeExp(arr, vars);
+			switch(array) {
+				Some(res_array): {
+					switch(res_array) {
+						ArrayValue(a): {
+							indexArray = executeExp(index, vars);
+							switch(indexArray) {
+								Some(res_index): {
+									switch(res_index) {
+										IntValue(i): {
+											true;
+										}
+										ArrayValue(a1): false; //Вместо индекса оказался массив (Получили массив, ожидали инт)
+									}
+								}
+								None(): false; //Ожидали Some() вернулся None()
+							}
+						}
+						IntValue(i1): false; //На месте массива оказался инт (Получили инт, ожидали массив)
+					}
+				}
+				None(): false; //Ожидали Some() вернулся None()
+			}
+		}
+		SetArr(arr, index, elem): { //Многомерные массивы должны работать (?) //Надо доработать механику массивов
+			array = executeExp(arr, vars);
+			switch(array) {
+				Some(res_array): {
+					switch(res_array) {
+						ArrayValue(a): {
+							indexArray = executeExp(index, vars);
+							switch(indexArray){
+								Some(res_index): {
+									switch(res_index) {
+										IntValue(i): {
+											safatyCheck(elem, vars);
+											/*elementArray = safatyCheck(elem, vars);
+											switch(elementArray) {
+												Some(res_elem): { //Вернулся какой-то элемент: это может быть как массив, так и инт
+													if (i < 0){ //Индексы положительные
+														println("set(): Index is negative \"" + toString(i) + "\"");
+														false;
+													} else { //А тут проверяем чтоб у нас существовал предыдущий индекс
+														true;
+													}
+												}
+												None(): false; //Ожидали Some() вернулся None()
+											}
+											true;*/
+										}
+										ArrayValue(a_): false; //Вместо индекса оказался массив (Получили массив, ожидали инт)
+									}
+								}
+								None(): false; //Ожидали Some() вернулся None()
+							}
+						}
+						IntValue(i_): false; //На месте массива оказался инт (Получили инт, ожидали массив)
+					}
+				} 
+				None(): false;
+			}
+		}
+		ConcatArr(arr1, arr2): {
+			array1 = executeExp(arr1, vars);
+			array2 = executeExp(arr2, vars);
+			switch(array1) {
+				Some(res_array1): {
+					switch(res_array1) {
+						ArrayValue(a1): {
+							switch(array2) {
+								Some(res_array2): {
+									switch(res_array2) {
+										ArrayValue(a2): {
+											if (isSameStructType(a1, a2)) {
+												true;
+											} else {
+												false;
+											}
+										}
+										IntValue(a2_): false; //На месте массива оказался инт (Получили инт, ожидали массив)
+									}
+								}
+								None(): false;
+							}
+						}
+						IntValue(a1_): false; //На месте массива оказался инт (Получили инт, ожидали массив)
+					}
+				}
+				None(): false;
+			}
+		}
+		Calc(op, l, r): {
+			left = executeExp(l, vars);
+			right = executeExp(r, vars);
+			switch(left) {
+				Some(res_left): {
+					switch(res_left) {
+						IntValue(l1): {
+							switch(right) {
+								Some(res_right): {
+									switch(res_right) {
+										IntValue(l2): {
+											if (isSameStructType(l1, l2)) {
+												true;
+											} else {
+												false;
+											}
+										}
+										ArrayValue(a2): false; //На месте массива оказался инт (Получили инт, ожидали массив)
+									}
+								}
+								None(): false;
+							}
+						}
+						ArrayValue(a1): false; //На месте массива оказался инт (Получили инт, ожидали массив)
+					}
+				}
+				None(): false;
+			}
+		}
+		Const(i): true;
+		Var(v): {
+			var = lookupTree(vars, v);
+			switch(var) {
+				Some(res_var): {
+					true;
+				}
+				None(): {
+					println("Error! Program don't know about this var: " + v);
+					false;
+				}
+			}
+		}
+	}
+}
+
+checkType(exp : Expression, vars : Tree<string, Value>) -> int {
+	switch(exp) {
+		Calc(op, l, r): {
+			left = checkType(l, vars);
+			right = checkType(r, vars);
+			if (left == 0 && right == 0){
+				0;
+			}
+			else {
+				-2; //ошибка
+			}
+		}
+		LenArr(a): {
+			if (checkType(a, vars) >= 1) {
+				0;
+			}
+			else {
+				println("Error type in LenArr()");
+				-2;
+			}
+		} //checkType(a, vars);
+		GetArr(a, i): {
+			if (checkType(i, vars) == 0 && checkType(a, vars) >= 1) {
+				-1;
+			} else {
+				println("Error type in GetArr()");
+				-2;
+			}
+			//checkType(a, vars) && checkType(i, vars);
+		}
+		SetArr(a, i, el): {
+			if (checkType(a, vars) - 1 == checkType(el, vars) && checkType(i, vars) == 0) {
+				-1;
+			}
+			else {
+				println("Error type in SetArr()");
+				-2;
+			}
+		} //checkType(a, vars) && checkType(i, vars) && checkType(el, vars);
+		ConcatArr(a1, a2): {
+			if (checkType(a1, vars)!= 0 && checkType(a2, vars) != 0 && checkType(a1, vars) == checkType(a2, vars)) {
+				-1;
+			}
+			else {
+				println("Error type in ConcatArr()");
+				-2;
+			}
+		} //checkType(a1, vars) && checkType(a2, vars);
+		Const(i): 0;
+		Var(v): {
+			var = lookupTree(vars, v);
+			switch(var) {
+				Some(res_var): {
+					switch(res_var) {
+						ArrayValue(a): 1;
+						IntValue(i): 0;
+					} 
+				}
+				None(): {
+					println("Error! Program don't know about this var: " + v);
+					-2;
+				}
+			}
+		}
+	}
+}
+
+checkExpression(exp : Expression, vars : Tree<string, Value>) -> bool {
+	switch(exp) {
+		Calc(op, l, r): {
+			left = checkExpression(l, vars);
+			right = checkExpression(r, vars);
+			left_type = checkType(l, vars);
+			right_type = checkType(r, vars);
+			if (left_type == right_type) {
+				if (op == "+") {
+					left && right && true;
+				} else if (op == "-") {
+					left && right && true;
+				} else if (op == "*") {
+					println("heeeere!");
+					left && right && true;
+				} else if (op == "/") {
+					left && right && true;
+				} else if (op == "%") {
+					left && right && true;
+				} else {
+					println("Waring! This operator \"" + op + "\" is not defined!");
+					false;
+				}
+			} else {
+				println("Bad types " + toString(exp));
+				false;
+			}
+			
+		}
+		
+		LenArr(a): true && checkExpression(a, vars) && safatyCheck(LenArr(a), vars);
+		GetArr(a, i): true && checkExpression(a, vars) && checkExpression(i, vars) && safatyCheck(GetArr(a, i), vars);
+		SetArr(a, i, el): true && checkExpression(a, vars) && checkExpression(i, vars) && checkExpression(el, vars) && safatyCheck(SetArr(a, i, el), vars);
+		ConcatArr(a1, a2): true && checkExpression(a1, vars) && checkExpression(a2, vars) && safatyCheck(ConcatArr(a1, a2), vars);
+		
+		Const(i): true;
+		Var(v): {
+			var = lookupTree(vars, v);
+			switch(var) {
+				Some(res_var): {
+					true;
+				}
+				None(): {
+					println("Error! Program don't know about this var: " + v);
+					false;
+				}
+			}
+		}
+	}
+	
+}
+
+checkCondition(cond : Compare, vars : Tree<string, Value>) -> bool {
+	left = checkExpression(cond.l, vars);
+	right = checkExpression(cond.r, vars);
+	if(cond.op == "==") {
+        left && right && true;
+    } else if (cond.op == "!=") {
+        left && right && true;
+    } else if (cond.op == ">=") {
+        left && right && true;
+    } else if (cond.op == "<=") {
+        left && right && true;
+    } else if (cond.op == ">") {
+        left && right && true;
+    } else if (cond.op == "<") {
+        left && right && true;
+    } else {
+        println("Waring! This operator \"" + cond.op + "\" is not defined!");
+		false;
+    }
+}
+
+checkAllOperators(lines : [Line], vars : Tree<string, Value>) -> bool {
+	fold(lines, true, \acc,elem -> {
+		switch(elem) {
+			Line(label, command): {
+				switch(command) {
+					Assign(var, e, goto): acc && checkExpression(e, vars) && checkExpression(var, vars);
+					Condition(cond, t, f): acc && checkCondition(cond, vars);
+					Print(e, goto): acc && checkExpression(e, vars);
+					GoTo(goto): acc && true;
+				}
+			}
+		}
+	});
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+program(myCode : string) -> Program {
+	gram = "#include D:\Files\Flow9\lab13-17\VM.lingo";
+	parsic(compilePegGrammar(gram), myCode, defaultPegActions);
+}
+
+//-------------------- Здесь заканчивается описание и реализация Virtual Machine -----------------------------------------------------------------------------
+
+//-------------------- NeMo ----------------------------------------------------------------------------------------------------------------------------------
+//---------- Общая структура программы -----------------------------------------------------------------------------------------------------------------------
+
+_Program(vars : [Vars], lines : Maybe<_Command>);
+
+_Command ::= _Assign, _Test, _Print, _Iter, _RangeExecute, _Select;
+    _Assign : (var : Var, e : Expression);
+	_Test : (comp: Compare);
+    _Print : (e : Expression);
+	_Iter : (c: _Command);
+	_RangeExecute : (c: [_Command]);
+	_Select : (c: [_Command]);
+
+negative(comp : Compare) -> Compare {
+	if (comp.op == "==") {
+		Compare("!=", comp.l, comp.r);
+	} else if (comp.op == "!=") {
+		Compare("==", comp.l, comp.r);
+	} else if (comp.op == ">") {
+		Compare("<=", comp.l, comp.r);
+	} else if (comp.op == "<") {
+		Compare(">=", comp.l, comp.r);
+	} else if (comp.op == ">=") {
+		Compare("<", comp.l, comp.r);
+	} else if (comp.op == "<=") {
+		Compare(">", comp.l, comp.r);
+	} else {
+		comp;
+	} 
+}
+
+nemoPegActions = {
+	t1 = setTree(defaultPegActions.t, "createRangeExecute", \value -> _RangeExecute(concat([value[0]], value[1])));
+	t2 = setTree(t1, "createSelect", \value -> _Select(concat([value[0]], value[1])));
+	t3 = setTree(t2, "createCondition", \value -> _Select([_RangeExecute([_Test(value[0]), value[1]]),_RangeExecute([_Test(negative(value[0])),value[2]])]));
+	t4 = setTree(t3, "createWhile", \value -> _RangeExecute([_Iter(_RangeExecute([_Test(value[0]), value[1]])), _Test(negative(value[0]))]));
+	t5 = setTree(t4, "createProgram", \value -> {
+		if (length(value[1]) == 1) {
+			_Program(value[0], Some(value[1][0]));
+		} else {
+			_Program(value[0], None());
+		}
+	});
+	SemanticActions(t5);
+}
+
+//-------------- Из NeMo в машинный код (для виртуальной машины) ---------------------------------------------------------------------------------------------
+
+TRUE = Compare(">", Const(1), Const(0));
+
+maxLabel(commands: Tree<int, Line>) -> int {
+	foldTree(commands, 0, \this_label,operation,acc_ -> {
+		result = {
+			switch(operation.command) {
+				Assign(var, e, goto): {
+					fold(goto, 0, \acc,l -> {
+						max(l.n, acc);
+					});
+				}
+				Condition(cond, t, f): {
+					newTrue = fold(t, 0, \acc,l -> {
+						max(l.n, acc);
+					});
+					newFalse = fold(f, 0, \acc,l -> {
+						max(l.n, acc);
+					});
+					max(newTrue, newFalse);
+				}
+				Print(e, goto): {
+					fold(goto, 0, \acc,l -> {
+						max(l.n, acc);
+					});
+				}
+				GoTo(goto): {
+					fold(goto, 0, \acc,l -> {
+						max(l.n, acc);
+					});
+				}
+			}
+		}
+		max3(this_label, acc_, result);
+	});
+}
+
+replaceLabel(commands: Tree<int, Line>, before : int, after : int) -> Tree<int, Line> {
+	foldTree(commands, commands, \label,command,acc -> {
+		newCommand = {
+			switch (command.command) {
+				Assign(var, e, goto): {
+					newGoto = foldi(goto, goto, \i,arr,l -> {
+						if (l.n == before) {
+							replace(arr, i, Label(after));
+						} else {
+							arr;
+						}
+					});
+					Assign(var, e, newGoto);
+				}
+				Condition(cond, t, f): {
+					newTrue = foldi(t, t, \i,arr,l -> {
+						if (l.n == before) {
+							replace(arr, i, Label(after));
+						} else {
+							arr;
+						} 
+					});
+					newFalse = foldi(f, f, \i,arr,l -> {
+						if (l.n == before) {
+							replace(arr, i, Label(after));
+						} 
+						else {
+							arr;
+						} 
+					});
+					Condition(cond, newTrue, newFalse);
+				}
+				Print(e, goto): {
+					newGoto = foldi(goto, goto, \i,arr,l -> {
+						if (l.n == before) {
+							replace(arr, i, Label(after));
+						} else {
+							arr;
+						}
+					});
+					Print(e, newGoto);
+				}
+				GoTo(goto): {
+					newGoto = foldi(goto, goto, \i,arr,l -> {
+						if (l.n == before) {
+							replace(arr, i, Label(after));
+						} else {
+							arr;
+						}
+					});
+					GoTo(newGoto);
+				}
+			}
+		};
+		if (label == before) {
+			setTree(removeFromTree(acc, label), after, Line(Label(label), newCommand));
+		} else {
+			setTree(acc, label, Line(Label(label), newCommand));
+		}
+	});
+}
+
+changeLabels(commands: Tree<int, Line>, offset : int) -> Tree<int, Line> {
+	if (offset == 0){
+		commands;
+	} else {
+		foldTree(commands, makeTree(), \label,operation,acc -> {
+			currentOperation = {
+				switch(operation.command) {
+					Assign(var, e, goto): {
+						newGoto = fold(goto, [], \labels,l -> {
+							concat(labels, [Label(l.n + offset)]);
+						});
+						Assign(var, e, newGoto);
+					}
+					Condition(cond, t, f): {
+						newTrue = fold(t, [], \labels,l -> {
+							concat(labels, [Label(l.n + offset)]);
+						});
+						newFalse = fold(f, [], \labels,l -> {
+							concat(labels, [Label(l.n + offset)]);
+						});
+						Condition(cond, newTrue, newFalse);
+					}
+					Print(e, goto): {
+						newGoto = fold(goto, [], \labels,l -> {
+							concat(labels, [Label(l.n + offset)]);
+						});
+						Print(e, newGoto);
+					}
+					GoTo(goto): {
+						newGoto = fold(goto, [], \labels,l -> {
+							concat(labels, [Label(l.n + offset)]);
+						});
+						GoTo(newGoto);
+					}
+				}
+			}
+			setTree(acc, label + offset, Line(Label(label + offset), currentOperation));
+		});
+	}
+}
+
+translateLines(command : _Command) -> Tree<int, Line> {
+	switch(command) {
+		_Assign(var, e): {
+			makeTree1(0, Line(Label(0), Assign(var, e, [Label(1)])));
+		}
+		_Test(comp): {
+			makeTree1(0, Line(Label(0), Condition(comp, [Label(1)], [])));
+		}
+		_Print(e): {
+			makeTree1(0, Line(Label(0), Print(e, [Label(1)])));
+		}
+		_Iter(c): {
+			treeChanged = changeLabels(translateLines(c), 1);
+			treeReplaced = replaceLabel(treeChanged, maxLabel(treeChanged), 0);
+			createLoop = makeTree1(0, Line(Label(0), Condition(TRUE, [Label(1), Label(maxLabel(treeReplaced) + 1)], [])));
+			mergeTree(createLoop, treeReplaced);
+		}
+		_RangeExecute(c): {
+			fold(c, makeTree(), \acc,operations -> {
+				mergeTree(acc, changeLabels(translateLines(operations), maxLabel(acc)));
+			});
+		}
+		_Select(c): {
+			result = fold(c, Pair(makeTree(), []), \acc,operations -> {
+				maxLeft = maxLabel(acc.first);
+				chandeRight = changeLabels(translateLines(operations), maxLeft);
+                replaceLastLeft = replaceLabel(acc.first, maxLeft, maxLabel(chandeRight));
+				tree = mergeTree(replaceLastLeft, chandeRight);
+				goto = concat(acc.second, [Label(maxLeft + 1)]);
+				Pair(tree, goto);
+			});
+			createLoop = makeTree1(0, Line(Label(0), Condition(TRUE, result.second, [])));
+			mergeTree(createLoop, changeLabels(result.first, 1));
+		}
+	}
+}
+
+toAssembler(command : _Command) -> [Line] {
+	foldTree(translateLines(command), [], \key,val,acc -> {
+		insertArray(acc, key, val);
+	});
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+programNemo(s : string) -> _Program {
+	gram = "#include D:\Files\Flow9\lab13-17\NeMo.lingo";
+    parsic(compilePegGrammar(gram), s, nemoPegActions);
+}
+
+main() {
+	// Тесты виртуальной машины ------------------------------------------------------------------
+	/*
+	//myProgram = program(getFileContent("D:/Files/Flow9/lab13-17/Matrix Multiply [VM].txt"));
+	myProgram = program(getFileContent("D:/Files/Flow9/lab13-17/Sort Massive [VM].txt"));
+	println("Program structure: ");
+	println(toString(myProgram));
+	println("\nProgram text (from structure): ");
+	println(progToString(myProgram));
+	vars = createVars(myProgram.vars);
+	lines = createLines(myProgram.lines);
+	println("Checking problems...");
+	if (checkAllOperators(myProgram.lines, vars) == true) {
+		println("Program without problems.");
+		println("\nRunning program...");
+    	startLabel = Label(0);
+    	firstPosition = Position(startLabel, vars);
+		exe = execute(firstPosition, lines);
+	}
+	else {
+		println("Program with problems. Exiting...");
+	}
+	quit(0);
+	*/
+	
+	//Немо + Виртуальная машина -------------------------------------------------------------------
+	
+	myProgram = programNemo(getFileContent("D:/Files/Flow9/lab13-17/NOD [NeMo].txt"));
+	println("NeMo structure: ");
+	println(myProgram);
+	println("\nVars tree: ");
+	vars = createVars(myProgram.vars);
+	println(vars);
+	statements = {
+		switch(myProgram.lines) {
+    	    None(): [];
+    	    Some(result): toAssembler(result);
+    	}
+	}
+	println("\nProgram structure: ");
+	println(toString(statements));
+	ProgramPrint = Program([], statements);
+	println("\nProgram text (from structure): ");
+	println(progToString(ProgramPrint));
+	treeStatements = createLines(statements);
+	if (checkAllOperators(statements, vars) == true) {
+		println("Program without problems.");
+		println("\nRunning program...");
+    	startLabel = Label(0);
+    	firstPosition = Position(startLabel, vars);
+		exe = execute(firstPosition, treeStatements);
+	}
+	else {
+		println("Program with problems. Exiting...");
+	}
+	quit(0);
+	
+}

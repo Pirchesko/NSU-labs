@@ -1,0 +1,7 @@
+import form/renderform;
+main(){
+    a : [int] = [7, 9, 3, 4, 5, 6];
+    println(a);
+    s = map(a, \i -> i2s(i));
+    println(s);
+}

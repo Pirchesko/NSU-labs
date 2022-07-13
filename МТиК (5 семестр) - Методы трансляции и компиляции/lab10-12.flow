@@ -1,0 +1,342 @@
+import form/renderform;
+import lingo/pegcode/driver;
+import runtime;
+
+gram = "#include D:\Files\Flow9\lab10-12.lingo";
+
+Exp ::= Sub, Sum, Mul, Div, Int, Var, Powah, Polinom;
+	Sub : (e1 : Exp, e2 : Exp);
+    Sum : (e1 : Exp, e2 : Exp);
+    Mul : (e1 : Exp, e2 : Exp);
+    Div : (e1 : Exp, e2 : Exp);
+    Int : (n : int);
+    Var : (s : string);
+    Powah : (e: Exp, i: int);
+
+Polinom : (name : string, count : int, pov : int);
+
+strToStruct(str: string) -> Exp {
+    parsic(compilePegGrammar(gram), str, defaultPegActions)
+}
+
+operationsPolinoms(a: Polinom, b: Polinom, op: string) -> Polinom {
+    if ((isSameStructType(Polinom("", 0, 0), a)) && (isSameStructType(Polinom("", 0, 0), b))){
+        if (a.name == b.name) {
+            if (a.name == "") { //для операций (цифра-цифра)
+                if (op == "-") {
+                    Polinom("", a.count - b.count, 0);
+                } else if (op == "+") {
+                    Polinom("", a.count + b.count, 0);
+                } else if (op == "*") {
+                    Polinom("", a.count * b.count, 0);
+                } else if (op == "/") {
+                    Polinom("", a.count / b.count, 0);
+                } else {
+                    //println("Error in function \"operationsPolinoms\"! Bad operation!");
+                    Polinom("error", 0, 0);
+                }
+            } else { //для операций (буква-буква)
+                if (op == "-") {
+                    if (a.pov == b.pov) {
+                        Polinom(a.name, a.count - b.count, a.pov);
+                    } else {
+                        //println("Error in function \"operationsPolinoms\"! a.pov != b.pov");
+                        Polinom("error", 0, 0);
+                    }
+                } else if (op == "+") {
+                    if (a.pov == b.pov) {
+                        Polinom(a.name, a.count + b.count, a.pov);
+                    } else {
+                        //println("Error in function \"operationsPolinoms\"! a.pov != b.pov");
+                        Polinom("error", 0, 0);
+                    }
+                } else if (op == "*") {
+                    Polinom(a.name, a.count * b.count, a.pov + b.pov);
+                } else if (op == "/") {
+                    Polinom(a.name, a.count / b.count, a.pov - b.pov);
+                } else {
+                    //println("Error in function \"operationsPolinoms\"! Bad operation!");
+                    Polinom("error", 0, 0);
+                }
+            }
+        } else if ((a.name == "" || b.name == "") && (a.name != "" || b.name != "")) { //(буква-цифра) или (цифра-буква)
+            if (op == "*"){
+                if (a.name == ""){
+                    Polinom(b.name, a.count * b.count, b.pov);
+                } else if (b.name == "") {
+                    Polinom(a.name, a.count * b.count, a.pov);
+                } else {
+                    //println("Error in function \"operationsPolinoms\"! operation constant with didgit");
+                    Polinom("error", 0, 0);
+                }
+            } else if (op == "/") {
+                if (a.name == ""){
+                    Polinom(b.name, a.count / b.count, (-1) * b.pov); //WARING!!!
+                } else if (b.name == "") {
+                    Polinom(a.name, a.count / b.count, a.pov);
+                } else {
+                    //println("Error in function \"operationsPolinoms\"! operation constant with didgit");
+                    Polinom("error", 0, 0);
+                }
+            } else {
+                //println("Error in function \"operationsPolinoms\"! operation constant with didgit");
+                Polinom("error", 0, 0);
+            }
+        } else {
+            //println("Error in function \"operationsPolinoms\"! a.name != b.name");
+            Polinom("error", 0, 0);
+        }
+    } else {
+        //println("Error in function \"operationsPolinoms\"! a or b is not a Polinams!");
+        Polinom("error", 0, 0);
+    }
+}
+
+//lab10
+structToPolinom(nt: Exp) -> Exp {
+    switch (nt) {
+        Sub(l, r): {
+            a = structToPolinom(l);
+            //println(toString(a));
+            b = structToPolinom(r);
+            //println(toString(b));
+            if (a == Polinom("", 0, 0)) {
+                structToPolinom(Mul(Int(-1), b)); // (0-b) = -b = (-1) * b;
+            } else if (b == Polinom("", 0, 0)) {
+                a; // (a-0) = a
+            } else {
+                switch (a) {
+                    Polinom(s, n, p): {
+                        switch (b) {
+                            Polinom(s1, n2, p2): {
+                                ret = operationsPolinoms(a, b, "-");
+                                if (Polinom("error", 0, 0) != ret) {
+                                    ret;
+                                }
+                                else {
+                                    Sub(a, b);
+                                }
+                            }
+                            default: Sub(a, b);
+                        }
+                    }
+                    default: Sub(a, b);
+                }
+            }
+        }
+        Sum(l, r): {
+            a = structToPolinom(l);
+            //println(toString(a));
+            b = structToPolinom(r);
+            //println(toString(b));
+            if (a == Polinom("", 0, 0)) {
+                b; // (0+b) = b
+            } else if (b == Polinom("", 0, 0)) {
+                a; // (a+0) = a
+            } else {
+                switch (a) {
+                    Polinom(s, n, p): {
+                        switch (b) {
+                            Polinom(s1, n2, p2): {
+                                ret = operationsPolinoms(a, b, "+");
+                                if (Polinom("error", 0, 0) != ret) {
+                                    ret;
+                                }
+                                else {
+                                    Sum(a, b);
+                                }
+                            }
+                            default: Sum(a, b);
+                        }
+                    }
+                    default: Sum(a, b);
+                }
+            }
+        }
+        Mul(l, r): {
+            a = structToPolinom(l);
+            //println(toString(a));
+            b = structToPolinom(r);
+            //println(toString(b));
+            if (a == Polinom("", 0, 0) || b == Polinom("", 0, 0)) {
+                Polinom("", 0, 0); // (a*0) = (0*b) = 0
+            } else if (a == Polinom("", 1, 0)) {
+                b; // (1*b) = b
+            } else if (b == Polinom("", 1, 0)) {
+                a; // (a*1) = a
+            } else {
+                switch (a) {
+                    Polinom(s, n, p): {
+                        switch (b) {
+                            Polinom(s1, n2, p2): {
+                                ret = operationsPolinoms(a, b, "*");
+                                if (Polinom("error", 0, 0) != ret) {
+                                    ret;
+                                }
+                                else {
+                                    Mul(a, b);
+                                }
+                            }
+                            default: Mul(a, b);
+                        }
+                    }
+                    default: Mul(a, b);
+                }
+            }
+        }
+        Div(l, r): {
+            a = structToPolinom(l);
+            b = structToPolinom(r);
+            if (a == Polinom("", 0, 0)) {
+                Polinom("", 0, 0); // (0/b) = 0
+            } else if (b == Polinom("", 0, 0)) {
+                fail0("Division by zero!");
+                //Polinom("", 0, 0); // (a/0) = 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ERROR
+            } else if (a == Polinom("", 1, 0)) {
+                fail("Error! Loss of precision in division!");
+                structToPolinom(Div(Int(1), b)); // (1/b) =
+            } else if (b == Polinom("", 1, 0)) {
+                a; // (a/1) = a
+            } else {
+                switch (a) {
+                    Polinom(s, n, p): {
+                        switch (b) {
+                            Polinom(s1, n2, p2): {
+                                ret = operationsPolinoms(a, b, "/");
+                                if (Polinom("error", 0, 0) != ret) {
+                                    ret;
+                                }
+                                else {
+                                    Div(a, b);
+                                }
+                            }
+                            default: Div(a, b);
+                        }
+                    }
+                    default: Div(a, b);
+                }
+            }
+        }
+        Powah(e, i):  { /////////////////////////////////?????????????? i<0??? степеньь полином?
+            a = structToPolinom(e);
+            if (i == 0) {
+                Polinom("", 1, 0);
+            } else if (i == 1) {
+                e;
+            } else if (i < 0) {
+                fail("Error! Power is < 0 !");
+                Powah(a, i);
+            } else {
+                switch (a) {
+                    Polinom(s, n, p): {
+                        Polinom(s, pow(n, i), p * i);
+                    }
+                    default: Powah(a, i);
+                }
+            }
+        }
+        Int(n): Polinom("", n, 0);
+        Var(s): Polinom(s, 1, 1);
+        Polinom(s,n,p): Polinom(s,n,p);
+    }
+}
+
+powah2(nt: Exp) -> Exp{
+    switch(nt) {
+        Sub(l, r): Mul(Sub(l,r), Sub(l,r));
+        Sum(l, r): Mul(Sum(l,r), Sum(l,r));
+        Mul(l, r): Mul(powah2(l), powah2(r));
+        Div(l, r): Div(powah2(l), powah2(r));
+        Int(n): Int(n*n);
+        Var(s): Powah(Var(s), 2);
+        Powah(l,r): Mul(Powah(l,r), Powah(l,r));
+        Polinom(s,n,p): Polinom(s,n,p);
+    }
+}
+
+//lab11
+structToDiff(nt: Exp, dif: string) -> Exp {
+    switch(nt){
+        Sub(l,r): Sub(structToDiff(l, dif), structToDiff(r, dif));
+        Sum(l,r): Sum(structToDiff(l, dif), structToDiff(r, dif));
+        Mul(l,r): Sum(Mul(structToDiff(l, dif), r), Mul(l, structToDiff(r, dif)));
+        Div(l,r): Div(Sub(Mul(structToDiff(l, dif), r), Mul(l, structToDiff(r, dif))), powah2(r));
+        Int(n): Int(0);
+        Var(s): {
+            if (s == dif) {
+                Int(1);
+            } else {
+                Int(0);
+            }
+        }
+        Powah(e, i): {
+            if (i > 2) {
+                Mul(Mul(Int(i), Powah(e, i-1)), structToDiff(e, "x"));
+            } else if (i == 2) {
+                Mul(Mul(Int(i), e), structToDiff(e, "x"));
+            } else {
+                fail("Error! Power is small or negative!");
+                Powah(e,i);
+            }
+        }
+        Polinom(s, n, p): Polinom(s, n, p);
+    }
+}
+
+//lab6
+structToStr(nt: Exp) -> string {
+    switch(nt) {
+        Sub(l, r): "(" + strGlue([structToStr(l), "-", structToStr(r)], "") + ")";
+        Sum(l, r): "(" + strGlue([structToStr(l), "+", structToStr(r)], "") + ")";
+        Mul(l, r): "(" + strGlue([structToStr(l), "*", structToStr(r)], "") + ")";
+        Div(l, r): "(" + strGlue([structToStr(l), "/", structToStr(r)], "") + ")";
+        Int(n): toString(n);
+        Var(s): s;
+        Powah(e, i): "(" + strGlue([structToStr(e), "^", toString(i)], "") + ")";
+        Polinom(s, n, p): {
+            if (s == ""){
+                toString(n);
+            } else {
+                if (p == 1){
+                    if (n == 1){
+                        s;
+                    } else {
+                        "(" + toString(n) + "*" + s + ")";
+                    }
+                }
+                else {
+                    if (n == 1){
+                        "(" + s + "^" + toString(p) + ")";
+                    } else {
+                        "(" + toString(n) + "*(" + s + "^" + toString(p) + "))";
+                    }
+                }
+            }
+        }
+    }
+}
+
+main() {
+    //str = "(5 + (0 - 3))";
+    //str = "((x + (2 * x)) + x)";
+    //str = "((x * (2 * x))^3)";
+    str = "((1 * ((((x ^ 2) + y) * x) + 0)) + (y * 0))";
+    //str = "(((2*x) +y)^2)";
+    //str = "(1/0)";
+    var = ["x", "y", "z", "w"];
+    num = [5,2,3,4];
+    println("Input:                        " + str);
+    t = strToStruct(str);
+    //println("Struct:                       " + toString(t));
+    println("Struct (str):                 " + structToStr(t));
+    tp = structToPolinom(t);
+    //println("Struct with polinom:          " + toString(tp));
+    println("Struct without polinom:       " + structToStr(tp));
+    d = structToDiff(t, "x");
+    //println("Struct diff:                  " + toString(d));
+    println("Struct diff (str):            " + structToStr(d));
+    dp = structToPolinom(d);
+    //println("Struct diff with polinom:     " + toString(dp));
+    println("Struct diff without polinom:  " + structToStr(dp));
+    quit(0);
+}

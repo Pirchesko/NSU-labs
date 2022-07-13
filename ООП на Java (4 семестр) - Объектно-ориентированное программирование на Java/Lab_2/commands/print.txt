@@ -1,0 +1,4 @@
+nameClass =commands.Print
+countArgs =0
+needArgs =1
+nameCommand =PRINT

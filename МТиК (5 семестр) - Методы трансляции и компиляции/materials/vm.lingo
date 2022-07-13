@@ -1,0 +1,42 @@
+vmprog = ws decl*:d vmline*:l {VMProgram(:d, :l)};
+
+
+letter = 'a' - 'z' | 'A' - 'Z';
+digit = '0' - '9';
+
+s = " " | "\t" | "\n" | "\r";
+ws = s*;
+
+operation = "+" | "-" | "*" | "/" | "%";
+compare = "==" | "!=" | "<=" | ">=" | ">" | "<";
+
+
+/* Vars declaration */
+type = int | arr;
+int = "int" {VarInt()};
+arr = "[" ws type:t ws "]" {VarArr(:t)};
+decl = "var" ws letter+$s ws ":" ws type:t ws ";" ws {VarDecl($s, :t)};
+
+/* expression */
+exp = bin | app | upd | var | const;
+bin = ws "(" ws exp:l ws operation$o ws exp:r ws ")" ws {BinOp($o, :l, :r)};
+app = ws "app" ws "(" ws exp:a ws "," ws exp:i ws ")" ws {ArrApp(:a, :i)};
+upd = ws "upd" ws "(" ws exp:a ws "," ws exp:v ws "," ws exp:i ws ")" ws {ArrUpd(:a, :v, :i)};
+var = letter+$s {Var($s)};
+const = digit+$d {Const(s2i($d))};
+
+/* goto */
+label = digit+$d ws {Label(s2i($d))};
+
+/* Assign */
+vmassign = ws letter+$s ws "=" ws exp:e ws "{" ws label*:goto "}" ws {Assign($s, :e, :goto)};
+
+/* Condition */
+comp = "(" ws exp:l ws compare$c ws exp:r ws ")" {CompOp($c, :l, :r)};
+vmcond = ws "if" ws comp:op ws "then" ws "{" ws label*:t "}" ws "else" ws "{" ws label*:f "}" ws {Condition(:op, :t, :f)};
+
+/* Print */
+vmprint = ws "print" ws "(" ws exp:e ws ")" ws "{" ws label*:goto "}" ws {Print(:e, :goto)};
+
+vmcommand = vmassign | vmcond | vmprint;
+vmline = ws label:l ":" vmcommand:c ";" ws {VMLine(:l, :c)};

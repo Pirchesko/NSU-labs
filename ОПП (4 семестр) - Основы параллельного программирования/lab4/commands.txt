@@ -1,0 +1,8 @@
+icc lab4.c -std=gnu99 -o lab4.exe
+./lab4.exe 6 6 6 100000000
+
+mpiicc lab4_mpi.c -std=gnu99 -o lab4_mpi.exe
+mpirun -np 2 ./lab4_mpi.exe 6 6 6 100000000
+
+mpeicc -mpilog -std=gnu99 -o lab4_mpe.exe lab4_mpi.c
+mpirun -np 16 ./lab4_mpe.exe 400 400 400 100000000

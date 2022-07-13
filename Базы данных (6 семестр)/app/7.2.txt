@@ -1,0 +1,20 @@
+-- 14. Получить данные о работах, выполненных указанным специалистом (сварщиком, слесарем и т.д.) в целом и по конкретной автомашине.
+-- Данные о работах, выполненных указанным специалистом по конкретной автомашине.
+
+SELECT "model", "type staff", "frist name", "last name"
+FROM "cars", (
+    SELECT "id repair", "id car" as "id_car", "id human", "type staff", "frist name", "last name"
+    FROM "repairs", (
+        SELECT "id repair" as "id_repair", "id human", "type staff", "frist name", "last name"
+        FROM "repairer", (
+            SELECT "id human" as "id_human", "frist name", "last name"
+            FROM "people"
+        ), (
+            SELECT "id human" as "id_staff", "type staff"
+            FROM "staff"
+        )
+        WHERE (("id human" = "id_human") AND ("id human" = "id_staff"))
+    )
+    WHERE ("id repair" = "id_repair")
+)
+WHERE (("id_car" = "id car") AND ("id car" = {}));

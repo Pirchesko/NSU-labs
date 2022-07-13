@@ -1,0 +1,10 @@
+-- 1. Получить данные об автопарке предприятия.
+SELECT "model", "type car", "mileage", "passanger seats", "standing places", "baggage scape", "load capacity", "maximum load weight", "route name"
+FROM (
+    SELECT "id car" as "id_car1", "model", "type car", "mileage"
+    FROM "cars"
+), (
+    SELECT "id car" as "id_car2", "passanger seats", "standing places", "baggage scape", "load capacity", "maximum load weight", "route name"
+    FROM "car atribute"
+)
+WHERE ("id_car1" = "id_car2");

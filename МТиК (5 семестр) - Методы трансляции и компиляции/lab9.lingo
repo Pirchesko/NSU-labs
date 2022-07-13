@@ -1,0 +1,11 @@
+tree = exp | int | var;
+exp = "(" ws* tree:l ws* "+" ws* tree:r ws* ")" {Sum(:l, :r)}
+	 | "(" ws* tree:l ws* "*" ws* tree:r ws* ")" {Mul(:l, :r)}
+	 | "(" ws* tree:l ws* "-" ws* tree:r ws* ")" {Sub(:l, :r)}
+	 | "(" ws* tree:l ws* "/" ws* tree:r ws* ")" {Div(:l, :r)}
+	 | "(" ws* tree:e ws* "^" ws* digit+$h ws* ")" {Powah(:e, s2i($h))};
+int = digit+$d { Int(s2i($d)) };
+var = str+$s { Var($s) };
+digit = '0'-'9';
+str = 'a'-'z';
+ws = " ";

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.GridPane?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="game.controller.GameController"
+            style="-fx-background-image: url(game/background.jpg);"
+            prefHeight="600.0" prefWidth="960.0"
+            fx:id="root"
+            onKeyPressed="#handleOnKeyPressed">
+
+    <AnchorPane fx:id="leftAnchorPane" prefWidth="200.0" style="-fx-border-width: 10px">
+        <children>
+            <ListView fx:id="playersListView" layoutY="89" prefHeight="500.0" prefWidth="200.0" style="-fx-border-color: black; -fx-border-width:2px "/>
+            <ImageView preserveRatio="true" y="22.0">
+                <image>
+                    <Image url="@/game/game/players.png" />
+                </image>
+            </ImageView>
+        </children>
+    </AnchorPane>
+
+    <GridPane fx:id="cellsPanel" layoutX="11.0" layoutY="89.0"/>
+
+    <ImageView fx:id="backButton" onMouseClicked="#backButtonPressed" onMouseExited="#backButtonExited" onMouseMoved="#backButtonMoved" pickOnBounds="true" preserveRatio="true" x="11.0" y="16.0">
+        <image>
+            <Image url="@/game/buttons/back_button/back_1.png" />
+        </image>
+    </ImageView>
+</AnchorPane>

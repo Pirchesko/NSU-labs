@@ -1,0 +1,5 @@
+tree = node | leaf;
+node = "(" ws* tree:l ws+ digit+$n ws+ tree:r ws* ")" {NumNode(:l, s2i($n), :r)};
+leaf = "_" {NumLeaf()};
+digit = '0'-'9';
+ws = " ";

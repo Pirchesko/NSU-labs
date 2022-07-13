@@ -1,0 +1,91 @@
+import form/renderform;
+import lingo/pegcode/driver;
+
+gram = "#include D:\Files\Flow9\lab5-7.lingo";
+
+Exp ::= Sub, Sum, Mul, Div, Int;
+	Sub : (e1 : Exp, e2 : Exp);
+    Sum : (e1 : Exp, e2 : Exp);
+    Mul : (e1 : Exp, e2 : Exp);
+    Div : (e1 : Exp, e2 : Exp);
+    Int : (n : int);
+
+/*build(xs : [flow]) {
+	if (xs[2] == 1){ // "+"
+        Sum(xs[0], xs[1]);
+    } else if (xs[2] == 2) { // "-"
+        Sub(xs[0], xs[1]);
+    } else if (xs[2] == 3) { // "*"
+        Mul(xs[0], xs[1]);
+    } else if (xs[2] == 4) { // "/"
+        Div(xs[0], xs[1]);
+    } else {
+        Dontknow(xs[0]);
+    }
+}
+
+specialPegActions = {
+	t = setTree(defaultPegActions.t, "build", build);
+    SemanticActions(t);
+}
+//parsic(lingoGrammar(), s, specialPegActions);*/
+
+//lab5
+strToStruct(str: string) -> Exp {
+  parsic(compilePegGrammar(gram), str, defaultPegActions)
+}
+
+//lab6
+structToStr(nt: Exp) -> string {
+    switch(nt) {
+        Sub(l, r): {
+            //println("-");
+            "(" + strGlue([structToStr(l), "-", structToStr(r)], "") + ")";
+        }
+        Sum(l, r): {
+            //println("+");
+            "(" + strGlue([structToStr(l), "+", structToStr(r)], "") + ")";
+        }
+        Mul(l, r): {
+            //println("*");
+            "(" + strGlue([structToStr(l), "*", structToStr(r)], "") + ")";
+        }
+        Div(l, r): {
+            //println("/");
+            "(" + strGlue([structToStr(l), "/", structToStr(r)], "") + ")";
+        }
+        Int(n): toString(n);
+    }
+}
+
+//lab7
+structToCalc(nt: Exp) -> int {
+    switch(nt) {
+        Sub(l, r): {
+            structToCalc(l) - structToCalc(r);
+        }
+        Sum(l, r): {
+            structToCalc(l) + structToCalc(r);
+        }
+        Mul(l, r): {
+            structToCalc(l) * structToCalc(r);
+        }
+        Div(l, r): {
+            structToCalc(l) / structToCalc(r);
+        }
+        Int(n): n;
+    }
+}
+
+main() {
+	//result = parsic(compilePegGrammar(gram), "1", specialPegActions);
+    //println(result);
+    str = "( ( 1 + 2 ) - (3 + 4) )";
+    t = strToStruct(str);
+    println("You are input:     " + str);
+    println("You structure:     " + toString(t));
+    println("Struct to str:     " + structToStr(t));
+    println("Calc struct  :     " + toString(structToCalc(t)));
+    quit(0);
+}
+

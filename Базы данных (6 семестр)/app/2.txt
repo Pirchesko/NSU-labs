@@ -1,0 +1,11 @@
+-- 3. Получить распределение водителей по автомобилям
+
+SELECT "frist name", "last name", "patronymic (if any)", "model", "type car"
+FROM "driver staff", (
+    SELECT "id human" as "id person", "frist name", "last name", "patronymic (if any)"
+    FROM "people"
+), (
+    SELECT "id car" as "id auto", "model", "type car"
+    FROM "cars"
+)
+WHERE (("id car" = "id auto") AND ("id human" = "id person"));

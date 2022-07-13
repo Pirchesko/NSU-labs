@@ -1,0 +1,13 @@
+-- 8. Получить сведения о наличии гаражного хозяйства в целом и по каждой категории транспорта.
+-- по каждой категории транспорта
+
+SELECT "type object", "model", "type car"
+FROM "cars", (
+    SELECT "id object" as "id garage", "type object"
+    FROM "objects"
+), (
+    SELECT "id car" as "id_car", "id object" as "id_object"
+    FROM "objects contents"
+)
+WHERE (("id_object" = "id garage") AND ("id_car" = "id car") AND ("type car" = '{}'))
+ORDER BY "id_object";

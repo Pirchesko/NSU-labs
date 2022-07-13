@@ -1,0 +1,4 @@
+-- 4.1 Подзапрос для выбора типа авто
+SELECT "type car"
+FROM "cars"
+GROUP BY "type car";

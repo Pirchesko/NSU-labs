@@ -1,0 +1,8 @@
+tree = exp | int;
+exp = "(" ws* tree:l ws* "+" ws* tree:r ws* ")" {Sum(:l, :r)}
+	 | "(" ws* tree:l ws* "*" ws* tree:r ws* ")" {Mul(:l, :r)}
+	 | "(" ws* tree:l ws* "-" ws* tree:r ws* ")" {Sub(:l, :r)}
+	 | "(" ws* tree:l ws* "/" ws* tree:r ws* ")" {Div(:l, :r)};
+int = digit+$d { Int(s2i($d)) };
+digit = '0'-'9';
+ws = " ";

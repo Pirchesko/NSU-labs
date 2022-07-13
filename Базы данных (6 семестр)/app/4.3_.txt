@@ -1,0 +1,4 @@
+-- 4.3 Подзапрос для выбора авто
+SELECT "model", "type car", "mileage"
+FROM "cars"
+ORDER BY "model";

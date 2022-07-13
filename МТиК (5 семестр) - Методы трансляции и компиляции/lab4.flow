@@ -1,0 +1,18 @@
+import form/renderform;
+inds(a: [int], m: int) -> [Pair<int,int>]{
+    foldi(a, [], \index1,pairs1,element1 -> {
+        foldi(a, pairs1, \index2,pairs,element2 -> {
+            if ((element1 + element2 == m) && (index2 > index1)){
+                concat(pairs, [Pair(index1, index2)]);
+            }
+            else {
+                pairs;
+            }
+        })
+   });
+}
+main(){
+    a : [int] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    m = 7;
+    println(inds(a, m));
+}

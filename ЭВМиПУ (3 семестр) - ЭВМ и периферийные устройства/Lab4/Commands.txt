@@ -1,0 +1,2 @@
+arm-linux-gnueabihf-gcc -S -O0 -o Lab4(-O0).s Lab4.c
+arm-linux-gnueabihf-gcc -S -O3 -o Lab4(-O3).s Lab4.c

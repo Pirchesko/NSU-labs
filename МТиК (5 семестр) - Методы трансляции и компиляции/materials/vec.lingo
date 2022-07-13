@@ -1,0 +1,5 @@
+sum = vec:v1 ws "+" ws vec:v2 {Sum(:v1, :v2)};
+vec = "(" ws num:x ws "," ws num:y ws ")" {Vec(:x, :y)};
+num = digit+$d { Int(s2i($d)) };
+digit = '0'-'9';
+ws = " "*;

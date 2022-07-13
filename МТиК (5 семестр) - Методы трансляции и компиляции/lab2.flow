@@ -1,0 +1,9 @@
+import form/renderform;
+main(){
+    a : [int] = [7, 9, 3, 4, 5, 6];
+    println(a);
+    sum = fold(a, 0, \y,x -> x+y);
+    sum1 = foldi(a, 0, \i,y,x -> x+y);
+    println(sum);
+    println(sum1);
+}

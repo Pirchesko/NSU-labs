@@ -1,0 +1,11 @@
+gcc lab1_test.c -O3 -std=gnu99 -o lab1_test.exe -lm
+
+gcc lab2.c -std=gnu99 -o lab2_gcc.exe -lm
+icc lab2.c -std=gnu99 -o lab2_icc.exe -lm
+gcc lab2.c -O3 -std=gnu99 -o lab2_gcc_O3.exe -lm
+icc lab2.c -O3 -std=gnu99 -o lab2_icc_O3.exe -lm
+
+icc -std=gnu99 -parallel -par_report3 -o lab2.exe lab2.c
+icc -std=gnu99 -openmp -o lab2_2.exe lab2_2.c
+icc -std=gnu99 -openmp -o lab2_1.exe lab2_1.c
+icc -std=gnu99 -openmp -o lab2_21.exe lab2_21.c

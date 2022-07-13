@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<AnchorPane xmlns="http://javafx.com/javafx/"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="game.controller.ConnectController"
+            style="-fx-background-image: url(game/background.jpg);"
+            prefHeight="600.0" prefWidth="960.0">
+
+    <ImageView pickOnBounds="true" preserveRatio="true" x="188.0" y="40.0">
+        <image>
+            <Image url="@/game/connect/available_games.png" />
+        </image>
+    </ImageView>
+
+    <ListView fx:id="availableGamesListView" layoutX="188" layoutY="145" prefHeight="340.0" prefWidth="585.0" style="-fx-border-color: black; -fx-border-width: 2px" onMouseClicked="#listElementClicked"/>
+
+    <ImageView fx:id="backButton" onMouseClicked="#backButtonPressed" onMouseMoved="#backButtonMoved" onMouseExited="#backButtonExited" pickOnBounds="true" preserveRatio="true" x="11.0" y="527.0">
+        <image>
+            <Image url="@/game/buttons/back_button/back_1.png" />
+        </image>
+    </ImageView>
+</AnchorPane>

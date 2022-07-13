@@ -1,0 +1,25 @@
+-- 7. Получить данные о подчиненности персонала: рабочие - бригадиры - мастера - начальники участков и цехов.
+-- Начальники - мастера
+
+SELECT "name chief", "last name chief", "name master", "last name master"
+FROM "chiefs", (
+    SELECT "id_chief", "frist name" as "name chief", "last name" as "last name chief"
+    FROM (
+        SELECT "id chief" as "id_chief"
+        FROM "chiefs"
+        GROUP BY "id chief"
+    ), (
+        SELECT "frist name", "last name", "id human" as "id_person1"
+        FROM "people"
+    )
+    WHERE ("id_person1" = "id_chief")
+), (
+    SELECT "frist name" as "name master", "last name" as "last name master", "id master" as "id_master"
+    FROM "chiefs", (
+        SELECT "frist name", "last name", "id human" as "id_person2"
+        FROM "people"
+    )
+    WHERE ("id_person2" = "id master")
+)
+WHERE (("id chief" = "id_chief") AND ("id master" = "id_master"))
+ORDER BY "name chief";
