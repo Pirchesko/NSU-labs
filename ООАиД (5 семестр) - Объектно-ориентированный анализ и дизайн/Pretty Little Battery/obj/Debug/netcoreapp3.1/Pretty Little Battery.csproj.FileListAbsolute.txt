@@ -1,0 +1,15 @@
+D:\Files\Visual Studio\Other\Pretty Little Battery\bin\Debug\netcoreapp3.1\Pretty Little Battery.exe
+D:\Files\Visual Studio\Other\Pretty Little Battery\bin\Debug\netcoreapp3.1\Pretty Little Battery.deps.json
+D:\Files\Visual Studio\Other\Pretty Little Battery\bin\Debug\netcoreapp3.1\Pretty Little Battery.runtimeconfig.json
+D:\Files\Visual Studio\Other\Pretty Little Battery\bin\Debug\netcoreapp3.1\Pretty Little Battery.runtimeconfig.dev.json
+D:\Files\Visual Studio\Other\Pretty Little Battery\bin\Debug\netcoreapp3.1\Pretty Little Battery.dll
+D:\Files\Visual Studio\Other\Pretty Little Battery\bin\Debug\netcoreapp3.1\Pretty Little Battery.pdb
+D:\Files\Visual Studio\Other\Pretty Little Battery\obj\Debug\netcoreapp3.1\Pretty Little Battery.csproj.AssemblyReference.cache
+D:\Files\Visual Studio\Other\Pretty Little Battery\obj\Debug\netcoreapp3.1\Pretty_Little_Battery.Form1.resources
+D:\Files\Visual Studio\Other\Pretty Little Battery\obj\Debug\netcoreapp3.1\Pretty Little Battery.csproj.GenerateResource.cache
+D:\Files\Visual Studio\Other\Pretty Little Battery\obj\Debug\netcoreapp3.1\Pretty Little Battery.AssemblyInfoInputs.cache
+D:\Files\Visual Studio\Other\Pretty Little Battery\obj\Debug\netcoreapp3.1\Pretty Little Battery.AssemblyInfo.cs
+D:\Files\Visual Studio\Other\Pretty Little Battery\obj\Debug\netcoreapp3.1\Pretty Little Battery.csproj.CoreCompileInputs.cache
+D:\Files\Visual Studio\Other\Pretty Little Battery\obj\Debug\netcoreapp3.1\Pretty Little Battery.dll
+D:\Files\Visual Studio\Other\Pretty Little Battery\obj\Debug\netcoreapp3.1\Pretty Little Battery.pdb
+D:\Files\Visual Studio\Other\Pretty Little Battery\obj\Debug\netcoreapp3.1\Pretty Little Battery.genruntimeconfig.cache

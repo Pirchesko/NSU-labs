@@ -1,0 +1,153 @@
+﻿#include <iostream>
+#include <Windows.h>
+
+double v(double x) //нужна точность через abs
+{
+    if (x >= 0)
+    {
+        return 0.0;
+    }
+    else
+    {
+        return 1.0;
+    }
+}
+
+double u(double x, int j, int t, double a, double b, int N, double C, double r, double* setka)
+{
+    if (j == 0) 
+    {
+        return v(a);
+    }
+    else if (j == N)
+    {
+        return v(b);
+    } 
+    else if (t == 0)
+    {
+        return v(x);
+    }
+    else
+    {
+        return C * r * (setka[(t - 1) * N + j + 1] - 2 * setka[(t - 1) * N + j] + setka[(t - 1) * N + j - 1]) - (r / 2.0) * (setka[(t - 1) * N + j + 1] - setka[(t - 1) * N + j - 1]) + setka[(t - 1) * N + j];
+    }
+}
+
+int main()
+{
+    /*
+    // Получаем дескрипторы для рисования
+    HWND hWnd = GetConsoleWindow();
+    HDC hDC = GetDC(hWnd);
+    // задаем то, чем рисуем
+    HPEN hPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+    SelectObject(hDC, hPen);
+    // рисуем линию из позиции (100, 100) в (200, 200), а потом в (300, 200)
+    MoveToEx(hDC, 100, 100, NULL);
+    LineTo(hDC, 200, 200);
+    LineTo(hDC, 300, 200);
+    std::cin.get();
+
+    // При завершении работы необходимо освободить ресурсы
+    DeleteObject(hPen);
+    ReleaseDC(hWnd, hDC);
+    */
+
+    double a = -1.0;
+    double b = 10.0;
+    double h = 0.1;
+    double tau = 0.01; //////////////////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+    double r = tau / h;
+    double x; //x=jh
+    double c1, c2, c3;
+    int N = (b - a) / h;
+    int T = 1500;
+    double* setka = (double*)malloc((N + 1) * (T + 1) * sizeof(double));
+    double* setka1 = (double*)malloc((N + 1) * (T + 1) * sizeof(double));
+    double* setka2 = (double*)malloc((N + 1) * (T + 1) * sizeof(double));
+    double* setka3 = (double*)malloc((N + 1) * (T + 1) * sizeof(double));
+    printf("Open on all window and press Enter\n");
+    std::cin.get();
+    for (int t = 0; t <= T; t++)
+    {
+        for (int j = 0; j <= N; j++)
+        {
+            x = a + j * h;
+            setka[t * N + j] = v(x - t);
+            //printf("setka_: t = %d, j = %d, x = %f, u = %f\n ", t, j, x, setka[t * N + j]);
+            setka1[t * N + j] = u(x, j, t, a, b, N, 1.0 / 2.0, r, setka1);
+            //printf("setka1: t = %d, j = %d, x = %f, u = %f\n ", t, j, x, setka1[t * N + j]);
+            setka2[t * N + j] = u(x, j, t, a, b, N, 1.0 / (2.0 * r), r, setka2);
+            //printf("setka2: t = %d, j = %d, x = %f, u = %f\n ", t, j, x, setka2[t * N + j]);
+            setka3[t * N + j] = u(x, j, t, a, b, N, 1.0 / 10.0, r, setka3);
+            //printf("setka2: t = %d, j = %d, x = %f, u = %f\n ", t, j, x, setka2[t * N + j]);
+        }
+        int s = 100;
+        HWND hWnd = GetConsoleWindow();
+        HDC hDC = GetDC(hWnd);
+        HPEN penXY = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        SelectObject(hDC, penXY);
+        MoveToEx(hDC, s, 0, NULL);
+        LineTo(hDC, s, 200);
+        MoveToEx(hDC, 0, s, NULL);
+        LineTo(hDC, 700, s);
+        HPEN penGraph0 = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+        HDC hDC0 = GetDC(hWnd);
+        //SelectObject(hDC, penGraph0);
+        HPEN penGraph1 = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+        HDC hDC1 = GetDC(hWnd);
+        //SelectObject(hDC, penGraph1);
+        HPEN penGraph2 = CreatePen(PS_SOLID, 1, RGB(255, 255, 0));
+        HDC hDC2 = GetDC(hWnd);
+        //SelectObject(hDC, penGraph2);
+        HPEN penGraph3 = CreatePen(PS_SOLID, 1, RGB(255, 0, 255));
+        HDC hDC3 = GetDC(hWnd);
+        //SelectObject(hDC, penGraph3);
+        for (int i = 0; i <= N; i++)
+        {
+            if (i == 0)
+            {
+                SelectObject(hDC0, penGraph0);
+                MoveToEx(hDC0, s - 50, s - (int)(setka[t * N] * 50.0), NULL);
+                SelectObject(hDC1, penGraph1);
+                MoveToEx(hDC1, s - 50, s - (int)(setka1[t * N] * 50.0), NULL);
+                SelectObject(hDC2, penGraph2);
+                MoveToEx(hDC2, s - 50, s - (int)(setka2[t * N] * 50.0), NULL);
+                SelectObject(hDC3, penGraph3);
+                MoveToEx(hDC3, s - 50, s - (int)(setka3[t * N] * 50.0), NULL);
+            }
+            else
+            {
+                SelectObject(hDC0, penGraph0);
+                LineTo(hDC0, s - 50 + i * 5, s - (int)(setka[t * N + i - 1] * 50.0));
+                LineTo(hDC0, s - 50 + i * 5, s - (int)(setka[t * N + i] * 50.0));
+                SelectObject(hDC1, penGraph1);
+                LineTo(hDC1, s - 50 + i * 5, s - (int)(setka1[t * N + i] * 50.0));
+                SelectObject(hDC2, penGraph2);
+                LineTo(hDC2, s - 50 + i * 5, s - (int)(setka2[t * N + i] * 50.0));
+                SelectObject(hDC3, penGraph3);
+                LineTo(hDC3, s - 50 + i * 5, s - (int)(setka3[t * N + i] * 50.0));
+            }
+        }
+        //LineTo(hDC, 200, 200);
+        //LineTo(hDC, 300, 200);
+        //std::cin.get();
+        //printf("\r\r");
+        //Sleep(100);
+        system("cls");
+
+        // При завершении работы необходимо освободить ресурсы
+        DeleteObject(penXY);
+        DeleteObject(penGraph0);
+        DeleteObject(penGraph1);
+        DeleteObject(penGraph2);
+        DeleteObject(penGraph3);
+        ReleaseDC(hWnd, hDC);
+        ReleaseDC(hWnd, hDC0);
+        ReleaseDC(hWnd, hDC1);
+        ReleaseDC(hWnd, hDC2);
+        ReleaseDC(hWnd, hDC3);
+    }
+
+    return 0;
+}
